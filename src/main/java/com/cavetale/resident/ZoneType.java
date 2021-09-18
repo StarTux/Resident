@@ -25,12 +25,11 @@ public enum ZoneType {
         private List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
             .filter(p -> p != Villager.Profession.NITWIT)
             .collect(Collectors.toList());
-        private List<Villager.Type> types = List.of(Villager.Type.values());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location) {
             return location.getWorld().spawn(location, Villager.class, e -> {
                     prepLiving(e);
                     e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
-                    e.setVillagerType(types.get(plugin.random.nextInt(types.size())));
+                    e.setVillagerType(Villager.Type.PLAINS);
                     e.setVillagerLevel(1 + plugin.random.nextInt(3));
                 });
         }
