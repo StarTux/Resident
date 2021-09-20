@@ -58,7 +58,7 @@ public final class EventListener implements Listener {
         handleEventEntity(event.getEntity(), event);
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
     private void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Spawned spawned = handleEventEntity(event.getRightClicked(), event);
         if (spawned == null) return;
