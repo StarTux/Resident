@@ -1,5 +1,6 @@
 package com.cavetale.resident;
 
+import com.cavetale.resident.save.Vec3i;
 import com.cavetale.resident.save.Zone;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Mob;
@@ -14,4 +15,6 @@ public final class Spawned {
     protected final int messageIndex;
     protected long lastMoved;
     protected long moveCooldown;
+    protected Vec3i movingTo;
+    protected boolean pathing;
 }

@@ -12,12 +12,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
+import org.bukkit.entity.Player;
 
 /**
  * This class represents the runtime object of a Zone.
@@ -88,6 +95,14 @@ public final class Zoned {
         return loadedBlockList;
     }
 
+    private List<Vec3i> computePlayerVectorList(World world) {
+        List<Vec3i> playerVectorList = new ArrayList<>();
+        for (Player player : world.getPlayers()) {
+            playerVectorList.add(Vec3i.of(player.getLocation()));
+        }
+        return playerVectorList;
+    }
+
     protected void spawn() {
         World world = Bukkit.getWorld(zone.getWorld());
         if (world == null) return;
@@ -95,6 +110,16 @@ public final class Zoned {
         if (count >= Math.min(messageList.size(), zone.getMaxResidents())) return;
         List<Vec3i> loadedBlockList = computeLoadedBlockList(world);
         if (loadedBlockList.isEmpty()) return;
+        // Do not spawn near players
+        List<Vec3i> playerVectorList = computePlayerVectorList(world);
+        loadedBlockList.removeIf(it -> {
+                for (Vec3i playerVector : playerVectorList) {
+                    if (it.maxDistance(playerVector) < 24) return true;
+                }
+                return false;
+            });
+        if (loadedBlockList.isEmpty()) return;
+        // Spawn!
         Vec3i blockVector = loadedBlockList.get(plugin.random.nextInt(loadedBlockList.size()));
         Block block = blockVector.toBlock(world);
         if (!canSpawnOnBlock(block)) return;
@@ -103,7 +128,7 @@ public final class Zoned {
 
     protected void spawn(Location location) {
         if (zone.getType() == null) return;
-        int messageIndex = -1;
+        final int messageIndex;
         if (!messageList.isEmpty()) {
             boolean[] usedIndexes = new boolean[messageList.size()];
             for (Spawned existing : plugin.findSpawned(zone)) {
@@ -118,20 +143,23 @@ public final class Zoned {
                     break;
                 }
             }
-            if (lowest >= 0) messageIndex = lowest;
+            messageIndex = lowest;
+        } else {
+            messageIndex = -1;
         }
-        Mob entity = zone.getType().spawn(plugin, location);
-        if (entity == null || entity.isDead()) return;
-        int entityId = entity.getEntityId();
-        plugin.spawnedMap.put(entity.getEntityId(), new Spawned(entity, zone, messageIndex));
-        Bukkit.getMobGoals().removeAllGoals(entity);
+        Mob entity = zone.getType().spawn(plugin, location, e -> {
+                int entityId = e.getEntityId();
+                Spawned spawned = new Spawned(e, zone, messageIndex);
+                plugin.spawnedMap.put(entityId, spawned);
+                spawned.movingTo = Vec3i.of(location);
+            });
     }
 
     protected void move() {
         long now = System.currentTimeMillis();
         World world = Bukkit.getWorld(zone.getWorld());
         if (world == null) return;
-        long then = now - 5000L;
+        long then = now - 2000L;
         List<Spawned> spawnedList = plugin.findSpawned(zone);
         for (Spawned spawned : spawnedList) {
             if (spawned.lastMoved > then) continue;
@@ -146,20 +174,62 @@ public final class Zoned {
         List<Vec3i> loadedBlockList = computeLoadedBlockList(world);
         loadedBlockList.removeIf(blockVector -> {
                 int distance = blockVector.maxDistance(mobVector);
-                return distance < 8 || distance > 24;
+                return distance < 8 || distance > 32;
             });
         if (loadedBlockList.isEmpty()) {
             spawned.entity.remove(); // modifies spawnedMap?
             return;
         }
+        // Move away from others
+        List<Spawned> spawnedList = plugin.findSpawned(zone);
+        List<Vec3i> spawnedVectorList = new ArrayList<>(spawnedList.size());
+        for (Spawned other : spawnedList) {
+            if (other == spawned) continue;
+            if (other.movingTo != null) spawnedVectorList.add(other.movingTo);
+        }
+        if (!spawnedVectorList.isEmpty()) {
+            // Remove vectors too close to other spawneds!
+            loadedBlockList.removeIf(it -> {
+                    for (Vec3i otherVector : spawnedVectorList) {
+                        if (otherVector.maxDistance(it) < 8) return true;
+                    }
+                    return false;
+                });
+        }
+        // Move!
         Vec3i targetVector = loadedBlockList.get(plugin.random.nextInt(loadedBlockList.size()));
         Block block = targetVector.toBlock(world);
         if (!canSpawnOnBlock(block)) return;
+        spawned.movingTo = targetVector;
         Location location = block.getLocation().add(0.5, 1.0, 0.5);
-        spawned.entity.getPathfinder().moveTo(location);
+        // reset speed and spam some debug info for now
+        // TODO: revise!
+        AttributeInstance movementSpeed = spawned.entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+        if (movementSpeed.getBaseValue() > 0.25) {
+            plugin.getLogger().info(zone.getName() + " Stupid movement speed: " + movementSpeed.getBaseValue());
+        }
+        for (AttributeModifier it : new ArrayList<>(movementSpeed.getModifiers())) {
+            plugin.getLogger().info(zone.getName() + " removed modifier: " + it.getAmount());
+            movementSpeed.removeModifier(it);
+        }
+        spawned.pathing = true;
+        spawned.entity.getPathfinder().moveTo(location, 1.0);
+        spawned.pathing = false;
     }
 
     public boolean contains(Location location) {
         return chunkBlockMap.containsKey(Vec2i.of(location.getBlockX() >> 4, location.getBlockZ() >> 4));
+    }
+
+    protected void talkTo(Spawned spawned, Player player) {
+        spawned.entity.getPathfinder().stopPathfinding();
+        spawned.moveCooldown = System.currentTimeMillis() + 5000L;
+        spawned.entity.lookAt(player);
+        if (spawned.messageIndex < 0 || spawned.messageIndex >= messageList.size()) return;
+        String message = messageList.get(spawned.messageIndex);
+        player.sendMessage(TextComponent.ofChildren(new Component[] {
+                    Component.text("Villager: ", NamedTextColor.WHITE),
+                    Component.text(message, NamedTextColor.GRAY),
+                }));
     }
 }
