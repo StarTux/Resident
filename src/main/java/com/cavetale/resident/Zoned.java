@@ -197,6 +197,7 @@ public final class Zoned {
                     }
                     return false;
                 });
+            if (loadedBlockList.isEmpty()) return;
         }
         // Move!
         Vec3i targetVector = loadedBlockList.get(plugin.random.nextInt(loadedBlockList.size()));
