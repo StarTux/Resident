@@ -19,9 +19,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
@@ -38,6 +35,10 @@ public final class Zoned {
     protected final Map<Vec2i, Set<Vec3i>> chunkBlockMap = new HashMap<>();
     protected int updateId = 0;
     protected boolean disabled;
+
+    public World getWorld() {
+        return Bukkit.getWorld(zone.getWorld());
+    }
 
     protected void disable() {
         disabled = true;
@@ -202,16 +203,6 @@ public final class Zoned {
         if (!canSpawnOnBlock(block)) return;
         spawned.movingTo = targetVector;
         Location location = block.getLocation().add(0.5, 1.0, 0.5);
-        // reset speed and spam some debug info for now
-        // TODO: revise!
-        AttributeInstance movementSpeed = spawned.entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
-        if (movementSpeed.getBaseValue() > 0.25) {
-            plugin.getLogger().info(zone.getName() + " Stupid movement speed: " + movementSpeed.getBaseValue());
-        }
-        for (AttributeModifier it : new ArrayList<>(movementSpeed.getModifiers())) {
-            plugin.getLogger().info(zone.getName() + " removed modifier: " + it.getAmount());
-            movementSpeed.removeModifier(it);
-        }
         spawned.pathing = true;
         spawned.entity.getPathfinder().moveTo(location, 1.0);
         spawned.pathing = false;
