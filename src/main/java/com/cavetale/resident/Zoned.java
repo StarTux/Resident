@@ -108,7 +108,7 @@ public final class Zoned {
         World world = Bukkit.getWorld(zone.getWorld());
         if (world == null) return;
         int count = plugin.countSpawned(zone);
-        if (count >= Math.min(messageList.size(), zone.getMaxResidents())) return;
+        if (count >= zone.getMaxResidents()) return;
         List<Vec3i> loadedBlockList = computeLoadedBlockList(world);
         if (loadedBlockList.isEmpty()) return;
         // Do not spawn near players
@@ -131,20 +131,21 @@ public final class Zoned {
         if (zone.getType() == null) return;
         final int messageIndex;
         if (!messageList.isEmpty()) {
-            boolean[] usedIndexes = new boolean[messageList.size()];
+            int[] usedIndexes = new int[messageList.size()];
             for (Spawned existing : plugin.findSpawned(zone)) {
-                if (existing.messageIndex < usedIndexes.length) {
-                    usedIndexes[existing.messageIndex] = true;
+                if (existing.messageIndex >= 0 && existing.messageIndex < usedIndexes.length) {
+                    usedIndexes[existing.messageIndex] += 1;
                 }
             }
-            int lowest = -1;
-            for (int i = 0; i < usedIndexes.length; i += 1) {
-                if (!usedIndexes[i]) {
-                    lowest = i;
-                    break;
+            int minValue = usedIndexes[0];
+            int lowestIndex = 0;
+            for (int i = 1; i < usedIndexes.length; i += 1) {
+                if (usedIndexes[i] < minValue) {
+                    minValue = usedIndexes[i];
+                    lowestIndex = i;
                 }
             }
-            messageIndex = lowest;
+            messageIndex = lowestIndex;
         } else {
             messageIndex = -1;
         }
