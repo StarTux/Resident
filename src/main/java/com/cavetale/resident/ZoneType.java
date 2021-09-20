@@ -99,5 +99,6 @@ public enum ZoneType {
             Villager villager = (Villager) mob;
             villager.setRecipes(List.of());
         }
+        mob.setSilent(true);
     }
 }
