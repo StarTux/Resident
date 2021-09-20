@@ -8,6 +8,7 @@ import com.cavetale.core.command.CommandWarn;
 import com.cavetale.resident.save.Cuboid;
 import com.cavetale.resident.save.Zone;
 import com.cavetale.resident.util.WorldEdit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
@@ -47,6 +48,14 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             .description("Add WorldEdit selection to zone")
             .completers(this::completeZoneNames)
             .playerCaller(this::zoneRegionAdd);
+        zoneRegionNode.addChild("remove").arguments("<zone>")
+            .description("Remove regions in WorldEdit selection")
+            .completers(this::completeZoneNames)
+            .playerCaller(this::zoneRegionRemove);
+        zoneRegionNode.addChild("highlight").arguments("<zone>")
+            .description("Highlight zone regions")
+            .completers(this::completeZoneNames)
+            .playerCaller(this::zoneRegionHighlight);
     }
 
     private boolean reload(CommandSender sender, String[] args) {
@@ -135,6 +144,54 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         plugin.save();
         player.sendMessage(Component.text("Region added to zone " + zoned.zone.getName()
                                           + ": " + region, NamedTextColor.YELLOW));
+        return true;
+    }
+
+    private boolean zoneRegionRemove(Player player, String[] args) {
+        if (args.length != 1) return false;
+        final String name = args[0];
+        Zoned zoned = plugin.zonedMap.get(name);
+        if (zoned == null) {
+            throw new CommandWarn("Zone not found: " + name);
+        }
+        if (!player.getWorld().getName().equals(zoned.zone.getWorld())) {
+            throw new CommandWarn("You're not in world " + zoned.zone.getWorld());
+        }
+        Cuboid selection = WorldEdit.getSelection(player);
+        if (selection == null) {
+            throw new CommandWarn("You don't have a WorldEdit selection!");
+        }
+        List<Cuboid> removeList = new ArrayList<>();
+        for (Cuboid region : zoned.zone.getRegions()) {
+            if (selection.contains(region)) {
+                removeList.add(region);
+            }
+        }
+        if (removeList.isEmpty()) {
+            throw new CommandWarn("No regions contained in your selection!");
+        }
+        zoned.zone.getRegions().removeAll(removeList);
+        zoned.updateSpawnBlocks();
+        plugin.save();
+        player.sendMessage(Component.text(removeList.size() + " regions removed from zone " + zoned.zone.getName()
+                                          + ": " + removeList, NamedTextColor.YELLOW));
+        return true;
+    }
+
+    private boolean zoneRegionHighlight(Player player, String[] args) {
+        if (args.length != 1) return false;
+        final String name = args[0];
+        Zoned zoned = plugin.zonedMap.get(name);
+        if (zoned == null) {
+            throw new CommandWarn("Zone not found: " + name);
+        }
+        if (!player.getWorld().getName().equals(zoned.zone.getWorld())) {
+            throw new CommandWarn("You're not in world " + zoned.zone.getWorld());
+        }
+        for (Cuboid region : zoned.zone.getRegions()) {
+            region.highlight(zoned.getWorld(), player);
+        }
+        player.sendMessage(Component.text("Highlighting " + zoned.zone.getName(), NamedTextColor.YELLOW));
         return true;
     }
 

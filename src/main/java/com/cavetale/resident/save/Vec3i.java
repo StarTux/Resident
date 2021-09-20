@@ -37,4 +37,10 @@ public final class Vec3i {
                         Math.max(Math.abs(other.y - y),
                                  Math.abs(other.z - z)));
     }
+
+    public boolean gte(Vec3i other) {
+        return x >= other.x
+            && y >= other.y
+            && z >= other.z;
+    }
 }
