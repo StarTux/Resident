@@ -28,7 +28,7 @@ public enum ZoneType {
     },
     SPAWN {
         private List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
-            .filter(p -> p != Villager.Profession.NITWIT)
+            .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
             return location.getWorld().spawn(location, Villager.class, e -> {
@@ -41,7 +41,7 @@ public enum ZoneType {
     },
     BAZAAR {
         private List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
-            .filter(p -> p != Villager.Profession.NITWIT)
+            .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
             return location.getWorld().spawn(location, Villager.class, e -> {
@@ -54,7 +54,7 @@ public enum ZoneType {
     },
     WITCH {
         private List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
-            .filter(p -> p != Villager.Profession.NITWIT)
+            .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
             return location.getWorld().spawn(location, Villager.class, e -> {
