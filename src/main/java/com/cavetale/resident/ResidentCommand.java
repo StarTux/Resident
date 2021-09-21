@@ -27,6 +27,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         rootNode.addChild("reload").denyTabCompletion()
             .description("Reload save file")
             .senderCaller(this::reload);
+        // Zone
         CommandNode zoneNode = rootNode.addChild("zone")
             .description("Zone commands");
         zoneNode.addChild("create").arguments("<name>").denyTabCompletion()
@@ -37,25 +38,32 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             .completers(this::completeZoneNames)
             .senderCaller(this::zoneInfo);
         zoneNode.addChild("type").arguments("<name> <type>")
+            .description("Set the zone type")
             .completers(this::completeZoneNames, CommandArgCompleter.enumLowerList(ZoneType.class))
             .senderCaller(this::zoneType);
         zoneNode.addChild("max").arguments("<name> <amount>")
+            .description("Set the resident maximum")
             .completers(this::completeZoneNames, CommandArgCompleter.integer(i -> i > 0))
             .senderCaller(this::zoneMax);
-        CommandNode zoneRegionNode = zoneNode.addChild("region")
+        zoneNode.addChild("clear").arguments("<name>")
+            .description("Clear all residents")
+            .completers(this::completeZoneNames)
+            .senderCaller(this::zoneClear);
+        // Region
+        CommandNode regionNode = rootNode.addChild("region")
             .description("Zone region commands");
-        zoneRegionNode.addChild("add").arguments("<zone>")
+        regionNode.addChild("add").arguments("<zone>")
             .description("Add WorldEdit selection to zone")
             .completers(this::completeZoneNames)
-            .playerCaller(this::zoneRegionAdd);
-        zoneRegionNode.addChild("remove").arguments("<zone>")
+            .playerCaller(this::regionAdd);
+        regionNode.addChild("remove").arguments("<zone>")
             .description("Remove regions in WorldEdit selection")
             .completers(this::completeZoneNames)
-            .playerCaller(this::zoneRegionRemove);
-        zoneRegionNode.addChild("highlight").arguments("<zone>")
+            .playerCaller(this::regionRemove);
+        regionNode.addChild("highlight").arguments("<zone>")
             .description("Highlight zone regions")
             .completers(this::completeZoneNames)
-            .playerCaller(this::zoneRegionHighlight);
+            .playerCaller(this::regionHighlight);
     }
 
     private boolean reload(CommandSender sender, String[] args) {
@@ -125,7 +133,20 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         return true;
     }
 
-    private boolean zoneRegionAdd(Player player, String[] args) {
+    private boolean zoneClear(CommandSender sender, String[] args) {
+        if (args.length != 2) return false;
+        Zoned zoned = requireZoned(args[0]);
+        int count = 0;
+        for (Spawned spawned : plugin.findSpawned(zoned.zone)) {
+            spawned.entity.remove();
+            count += 1;
+        }
+        sender.sendMessage(Component.text("Cleared " + count + " residents from " + zoned.zone.getName(),
+                                          NamedTextColor.YELLOW));
+        return true;
+    }
+
+    private boolean regionAdd(Player player, String[] args) {
         if (args.length != 1) return false;
         final String name = args[0];
         Zoned zoned = plugin.zonedMap.get(name);
@@ -147,7 +168,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         return true;
     }
 
-    private boolean zoneRegionRemove(Player player, String[] args) {
+    private boolean regionRemove(Player player, String[] args) {
         if (args.length != 1) return false;
         final String name = args[0];
         Zoned zoned = plugin.zonedMap.get(name);
@@ -178,7 +199,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         return true;
     }
 
-    private boolean zoneRegionHighlight(Player player, String[] args) {
+    private boolean regionHighlight(Player player, String[] args) {
         if (args.length != 1) return false;
         final String name = args[0];
         Zoned zoned = plugin.zonedMap.get(name);
