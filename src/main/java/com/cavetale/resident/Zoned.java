@@ -29,6 +29,7 @@ import org.bukkit.entity.Player;
  */
 @RequiredArgsConstructor
 public final class Zoned {
+    protected static final int SPAWN_DISTANCE = 16;
     protected final ResidentPlugin plugin;
     protected final Zone zone;
     protected final List<String> messageList;
@@ -131,6 +132,17 @@ public final class Zoned {
                 return false;
             });
         if (loadedBlockList.isEmpty()) return;
+        // Do not spawn near others
+        List<Spawned> existingList = plugin.findSpawned(zone);
+        loadedBlockList.removeIf(it -> {
+                for (Spawned existing : existingList) {
+                    if (existing.movingTo == null) continue;
+                    if (existing.movingTo.maxDistance(it) < SPAWN_DISTANCE) return true;
+                }
+                return false;
+            });
+        if (loadedBlockList.isEmpty()) return;
+        // Total
         total = (int) Math.ceil((double) zone.getMaxResidents()
                                 * (((double) loadedBlockList.size())
                                    / ((double) spawnBlocks.size())));
@@ -142,6 +154,8 @@ public final class Zoned {
             Block block = blockVector.toBlock(world);
             if (!canSpawnOnBlock(block)) continue;
             spawn(block.getLocation().add(0.5, 1.0, 0.5));
+            loadedBlockList.removeIf(it -> blockVector.maxDistance(it) < SPAWN_DISTANCE);
+            if (loadedBlockList.isEmpty()) break;
         }
     }
 
