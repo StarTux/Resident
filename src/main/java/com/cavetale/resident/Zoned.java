@@ -123,11 +123,17 @@ public final class Zoned {
             total = 0;
             return;
         }
+        // Total
+        total = (int) Math.ceil((double) zone.getMaxResidents()
+                                * (((double) loadedBlockList.size())
+                                   / ((double) spawnBlocks.size())));
+        int difference = total - count;
+        if (difference < 1) return;
         // Do not spawn near players
         Set<Vec3i> playerVectorSet = computePlayerVectorSet(world);
         loadedBlockList.removeIf(it -> {
                 for (Vec3i playerVector : playerVectorSet) {
-                    if (it.maxDistance(playerVector) < 24) return true;
+                    if (it.maxDistance(playerVector) < 16) return true;
                 }
                 return false;
             });
@@ -142,12 +148,6 @@ public final class Zoned {
                 return false;
             });
         if (loadedBlockList.isEmpty()) return;
-        // Total
-        total = (int) Math.ceil((double) zone.getMaxResidents()
-                                * (((double) loadedBlockList.size())
-                                   / ((double) spawnBlocks.size())));
-        int difference = total - count;
-        if (difference < 1) return;
         // Spawn!
         for (int i = 0; i < difference; i += 1) {
             Vec3i blockVector = loadedBlockList.remove(plugin.random.nextInt(loadedBlockList.size()));
