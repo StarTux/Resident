@@ -17,4 +17,10 @@ public final class Spawned {
     protected long moveCooldown;
     protected Vec3i movingTo;
     protected boolean pathing;
+
+    public Vec3i getEntityVector() {
+        return movingTo != null
+            ? movingTo
+            : Vec3i.of(entity.getLocation());
+    }
 }
