@@ -136,7 +136,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
     }
 
     private boolean zoneClear(CommandSender sender, String[] args) {
-        if (args.length != 2) return false;
+        if (args.length != 1) return false;
         Zoned zoned = requireZoned(args[0]);
         int count = 0;
         for (Spawned spawned : plugin.findSpawned(zoned.zone)) {
