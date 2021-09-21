@@ -113,14 +113,14 @@ public final class Zoned {
     protected void spawn() {
         World world = getWorld();
         if (world == null) {
-            total = 0;
+            total = -2;
             return;
         }
         int count = plugin.countSpawned(zone);
         if (count >= zone.getMaxResidents()) return;
         List<Vec3i> loadedBlockList = new ArrayList<>(computeLoadedBlockSet(world));
         if (loadedBlockList.isEmpty()) {
-            total = 0;
+            total = -1;
             return;
         }
         // Do not spawn too far from players.  We calculate this
