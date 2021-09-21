@@ -88,6 +88,8 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         sender.sendMessage(Component.text("UpdateId " + zoned.updateId, NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Disabled " + zoned.disabled, NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Messages " + zoned.messageList.size(), NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("Max " + zoned.zone.getMaxResidents(), NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("Total " + zoned.total, NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Spawned " + plugin.countSpawned(zoned.zone) + " ", NamedTextColor.YELLOW)
                            .append(Component.join(Component.text(", ", NamedTextColor.GRAY),
                                                   plugin.findSpawned(zoned.zone).stream()

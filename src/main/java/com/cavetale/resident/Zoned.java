@@ -7,6 +7,7 @@ import com.cavetale.resident.save.Zone;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +35,7 @@ public final class Zoned {
     protected final Set<Vec3i> spawnBlocks = new HashSet<>();
     protected final Map<Vec2i, Set<Vec3i>> chunkBlockMap = new HashMap<>();
     protected int updateId = 0;
+    protected int total = 0;
     protected boolean disabled;
 
     public World getWorld() {
@@ -76,55 +78,71 @@ public final class Zoned {
     private void computeChunkSpawnBlocks(World world, Vec2i chunkVector, Set<Vec3i> vectorSet, final int id) {
         world.getChunkAtAsync(chunkVector.x, chunkVector.y, (Consumer<Chunk>) c -> {
                 if (id != this.updateId || disabled) return;
-                for (Vec3i vector : vectorSet) {
+                for (Iterator<Vec3i> iter = vectorSet.iterator(); iter.hasNext();) {
+                    Vec3i vector = iter.next();
                     Block block = vector.toBlock(world);
-                    if (canSpawnOnBlock(block)) {
-                        spawnBlocks.add(vector);
-                        if (spawnBlocks.size() > 100000) return; // Magic number
+                    if (!canSpawnOnBlock(block)) {
+                        iter.remove();
+                        continue;
                     }
+                    spawnBlocks.add(vector);
+                    if (spawnBlocks.size() > 100000) return; // Magic number
                 }
             });
     }
 
-    private List<Vec3i> computeLoadedBlockList(World world) {
-        List<Vec3i> loadedBlockList = new ArrayList<>();
+    private Set<Vec3i> computeLoadedBlockSet(World world) {
+        Set<Vec3i> result = new HashSet<>();
         for (Map.Entry<Vec2i, Set<Vec3i>> entry : chunkBlockMap.entrySet()) {
             Vec2i chunkVector = entry.getKey();
             if (!world.isChunkLoaded(chunkVector.x, chunkVector.y)) continue;
-            loadedBlockList.addAll(entry.getValue());
+            result.addAll(entry.getValue());
         }
-        return loadedBlockList;
+        return result;
     }
 
-    private List<Vec3i> computePlayerVectorList(World world) {
-        List<Vec3i> playerVectorList = new ArrayList<>();
+    private Set<Vec3i> computePlayerVectorSet(World world) {
+        Set<Vec3i> result = new HashSet<>();
         for (Player player : world.getPlayers()) {
-            playerVectorList.add(Vec3i.of(player.getLocation()));
+            result.add(Vec3i.of(player.getLocation()));
         }
-        return playerVectorList;
+        return result;
     }
 
     protected void spawn() {
-        World world = Bukkit.getWorld(zone.getWorld());
-        if (world == null) return;
+        World world = getWorld();
+        if (world == null) {
+            total = 0;
+            return;
+        }
         int count = plugin.countSpawned(zone);
         if (count >= zone.getMaxResidents()) return;
-        List<Vec3i> loadedBlockList = computeLoadedBlockList(world);
-        if (loadedBlockList.isEmpty()) return;
+        List<Vec3i> loadedBlockList = new ArrayList<>(computeLoadedBlockSet(world));
+        if (loadedBlockList.isEmpty()) {
+            total = 0;
+            return;
+        }
         // Do not spawn near players
-        List<Vec3i> playerVectorList = computePlayerVectorList(world);
+        Set<Vec3i> playerVectorSet = computePlayerVectorSet(world);
         loadedBlockList.removeIf(it -> {
-                for (Vec3i playerVector : playerVectorList) {
+                for (Vec3i playerVector : playerVectorSet) {
                     if (it.maxDistance(playerVector) < 24) return true;
                 }
                 return false;
             });
         if (loadedBlockList.isEmpty()) return;
+        total = (int) Math.ceil((double) zone.getMaxResidents()
+                                * (((double) loadedBlockList.size())
+                                   / ((double) spawnBlocks.size())));
+        int difference = total - count;
+        if (difference < 1) return;
         // Spawn!
-        Vec3i blockVector = loadedBlockList.get(plugin.random.nextInt(loadedBlockList.size()));
-        Block block = blockVector.toBlock(world);
-        if (!canSpawnOnBlock(block)) return;
-        spawn(block.getLocation().add(0.5, 1.0, 0.5));
+        for (int i = 0; i < difference; i += 1) {
+            Vec3i blockVector = loadedBlockList.remove(plugin.random.nextInt(loadedBlockList.size()));
+            Block block = blockVector.toBlock(world);
+            if (!canSpawnOnBlock(block)) continue;
+            spawn(block.getLocation().add(0.5, 1.0, 0.5));
+        }
     }
 
     protected void spawn(Location location) {
@@ -173,7 +191,7 @@ public final class Zoned {
 
     private void move(Spawned spawned, World world) {
         Vec3i mobVector = Vec3i.of(spawned.entity.getLocation());
-        List<Vec3i> loadedBlockList = computeLoadedBlockList(world);
+        List<Vec3i> loadedBlockList = new ArrayList<>(computeLoadedBlockSet(world));
         loadedBlockList.removeIf(blockVector -> {
                 int distance = blockVector.maxDistance(mobVector);
                 return distance < 8 || distance > 32;
