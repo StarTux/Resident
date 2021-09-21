@@ -129,9 +129,9 @@ public final class Zoned {
         final int maxPlayerDistance = world.getViewDistance() * 16;
         loadedBlockList.removeIf(it -> {
                 for (Vec3i playerVector : playerVectorSet) {
-                    if (it.maxDistance(playerVector) > maxPlayerDistance) return true;
+                    if (it.maxDistance(playerVector) <= maxPlayerDistance) return false;
                 }
-                return false;
+                return true;
             });
         if (loadedBlockList.isEmpty()) return;
         // Total
@@ -143,7 +143,7 @@ public final class Zoned {
         // Do not spawn too close to players
         loadedBlockList.removeIf(it -> {
                 for (Vec3i playerVector : playerVectorSet) {
-                    if (it.maxDistance(playerVector) < 16) return true;
+                    if (it.maxDistance(playerVector) < 12) return true;
                 }
                 return false;
             });
