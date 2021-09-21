@@ -31,6 +31,9 @@ import org.bukkit.entity.Player;
 @RequiredArgsConstructor
 public final class Zoned {
     protected static final int SPAWN_DISTANCE = 8;
+    protected static final int PLAYER_DISTANCE = 16;
+    protected static final int MIN_MOVE_DISTANCE = 8;
+    protected static final int MAX_MOVE_DISTANCE = 48;
     protected final ResidentPlugin plugin;
     protected final Zone zone;
     protected final List<String> messageList;
@@ -149,7 +152,7 @@ public final class Zoned {
         // Do not spawn too close to players
         loadedBlockList.removeIf(it -> {
                 for (Vec3i playerVector : playerVectorSet) {
-                    if (it.maxDistance(playerVector) < 12) return true;
+                    if (it.maxDistance(playerVector) < PLAYER_DISTANCE) return true;
                 }
                 return false;
             });
@@ -223,7 +226,7 @@ public final class Zoned {
         List<Vec3i> loadedBlockList = new ArrayList<>(computeLoadedBlockSet(world));
         loadedBlockList.removeIf(blockVector -> {
                 int distance = blockVector.maxDistance(mobVector);
-                return distance < 8 || distance > 32;
+                return distance < MIN_MOVE_DISTANCE || distance > MAX_MOVE_DISTANCE;
             });
         if (loadedBlockList.isEmpty()) {
             spawned.entity.remove(); // modifies spawnedMap?
@@ -240,7 +243,7 @@ public final class Zoned {
             // Remove vectors too close to other spawneds!
             loadedBlockList.removeIf(it -> {
                     for (Vec3i otherVector : spawnedVectorList) {
-                        if (otherVector.maxDistance(it) < 8) return true;
+                        if (otherVector.maxDistance(it) < SPAWN_DISTANCE) return true;
                     }
                     return false;
                 });
