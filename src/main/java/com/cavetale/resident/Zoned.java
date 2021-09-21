@@ -18,6 +18,7 @@ import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -105,6 +106,7 @@ public final class Zoned {
     private Set<Vec3i> computePlayerVectorSet(World world) {
         Set<Vec3i> result = new HashSet<>();
         for (Player player : world.getPlayers()) {
+            if (player.getGameMode() == GameMode.SPECTATOR) continue;
             result.add(Vec3i.of(player.getLocation()));
         }
         return result;
@@ -113,19 +115,23 @@ public final class Zoned {
     protected void spawn() {
         World world = getWorld();
         if (world == null) {
-            total = -2;
+            total = -3;
             return;
         }
         int count = plugin.countSpawned(zone);
         if (count >= zone.getMaxResidents()) return;
         List<Vec3i> loadedBlockList = new ArrayList<>(computeLoadedBlockSet(world));
         if (loadedBlockList.isEmpty()) {
-            total = -1;
+            total = -2;
             return;
         }
         // Do not spawn too far from players.  We calculate this
         // _before_ the total, so get back to player distances later.
         final Set<Vec3i> playerVectorSet = computePlayerVectorSet(world);
+        if (playerVectorSet.isEmpty()) {
+            total = -1;
+            return;
+        }
         final int maxPlayerDistance = world.getViewDistance() * 16;
         loadedBlockList.removeIf(it -> {
                 for (Vec3i playerVector : playerVectorSet) {
