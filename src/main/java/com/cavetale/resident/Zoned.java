@@ -123,14 +123,24 @@ public final class Zoned {
             total = 0;
             return;
         }
+        // Do not spawn too far from players.  We calculate this
+        // _before_ the total, so get back to player distances later.
+        final Set<Vec3i> playerVectorSet = computePlayerVectorSet(world);
+        final int maxPlayerDistance = world.getViewDistance() * 16;
+        loadedBlockList.removeIf(it -> {
+                for (Vec3i playerVector : playerVectorSet) {
+                    if (it.maxDistance(playerVector) > maxPlayerDistance) return true;
+                }
+                return false;
+            });
+        if (loadedBlockList.isEmpty()) return;
         // Total
         total = (int) Math.ceil((double) zone.getMaxResidents()
                                 * (((double) loadedBlockList.size())
                                    / ((double) spawnBlocks.size())));
-        int difference = total - count;
+        final int difference = total - count;
         if (difference < 1) return;
-        // Do not spawn near players
-        Set<Vec3i> playerVectorSet = computePlayerVectorSet(world);
+        // Do not spawn too close to players
         loadedBlockList.removeIf(it -> {
                 for (Vec3i playerVector : playerVectorSet) {
                     if (it.maxDistance(playerVector) < 16) return true;
