@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -91,7 +92,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         sender.sendMessage(Component.text("Max " + zoned.zone.getMaxResidents(), NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Total " + zoned.total, NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Spawned " + plugin.countSpawned(zoned.zone) + " ", NamedTextColor.YELLOW)
-                           .append(Component.join(Component.text(", ", NamedTextColor.GRAY),
+                           .append(Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
                                                   plugin.findSpawned(zoned.zone).stream()
                                                   .map(spawned -> Component.text("(" + spawned.messageIndex + ")", NamedTextColor.GOLD))
                                                   .collect(Collectors.toList()))));

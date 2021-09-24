@@ -1,5 +1,6 @@
 package com.cavetale.resident;
 
+import com.cavetale.core.font.VanillaItems;
 import com.cavetale.resident.save.Cuboid;
 import com.cavetale.resident.save.Vec2i;
 import com.cavetale.resident.save.Vec3i;
@@ -14,7 +15,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -270,9 +271,10 @@ public final class Zoned {
         spawned.entity.lookAt(player);
         if (spawned.messageIndex < 0 || spawned.messageIndex >= messageList.size()) return;
         String message = messageList.get(spawned.messageIndex);
-        player.sendMessage(TextComponent.ofChildren(new Component[] {
-                    Component.text("Villager: ", NamedTextColor.WHITE),
-                    Component.text(message, NamedTextColor.GRAY),
+        player.sendMessage(Component.join(JoinConfiguration.noSeparators(), new Component[] {
+                    VanillaItems.EMERALD.component,
+                    Component.text("Villager: ", NamedTextColor.GRAY),
+                    Component.text(message, NamedTextColor.WHITE),
                 }));
     }
 }
