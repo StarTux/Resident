@@ -193,14 +193,17 @@ public final class Zoned {
                 }
             }
             int minValue = usedIndexes[0];
-            int lowestIndex = 0;
-            for (int i = 1; i < usedIndexes.length; i += 1) {
+            List<Integer> indexOptions = new ArrayList<>(usedIndexes.length);
+            for (int i = 0; i < usedIndexes.length; i += 1) {
                 if (usedIndexes[i] < minValue) {
                     minValue = usedIndexes[i];
-                    lowestIndex = i;
+                    indexOptions.clear();
+                    indexOptions.add(i);
+                } else if (usedIndexes[i] == minValue) {
+                    indexOptions.add(i);
                 }
             }
-            messageIndex = lowestIndex;
+            messageIndex = indexOptions.get(plugin.random.nextInt(indexOptions.size()));
         } else {
             messageIndex = -1;
         }
