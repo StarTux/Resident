@@ -21,6 +21,7 @@ import org.bukkit.event.entity.VillagerAcquireTradeEvent;
 import org.bukkit.event.entity.VillagerCareerChangeEvent;
 import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 @RequiredArgsConstructor
 public final class EventListener implements Listener {
@@ -118,4 +119,10 @@ public final class EventListener implements Listener {
     private void onPlayerEntityAbility(PlayerEntityAbilityQuery query) {
         handleEventEntity(query.getEntity(), query);
     }
+
+    @EventHandler
+    void onPlayerQuit(PlayerQuitEvent event) {
+        plugin.sessions.remove(event.getPlayer().getUniqueId());
+    }
+
 }

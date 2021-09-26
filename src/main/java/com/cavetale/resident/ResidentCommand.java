@@ -107,9 +107,9 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         }
         Zone zone = new Zone(name, player.getWorld().getName());
         plugin.save.getZones().add(zone);
-        plugin.zonedMap.put(zone.getName(), new Zoned(plugin, zone, plugin.messagesConfig.getStringList(name)));
-        player.sendMessage(Component.text("Zone created in world " + zone.getWorld() + ": " + zone.getName()));
         plugin.save();
+        plugin.enableZone(zone);
+        player.sendMessage(Component.text("Zone created in world " + zone.getWorld() + ": " + zone.getName()));
         return true;
     }
 

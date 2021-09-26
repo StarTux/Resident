@@ -1,6 +1,8 @@
 package com.cavetale.resident;
 
 import com.cavetale.core.font.VanillaItems;
+import com.cavetale.resident.message.ZoneMessage;
+import com.cavetale.resident.message.ZoneMessageList;
 import com.cavetale.resident.save.Cuboid;
 import com.cavetale.resident.save.Vec2i;
 import com.cavetale.resident.save.Vec3i;
@@ -21,6 +23,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
@@ -37,7 +41,7 @@ public final class Zoned {
     protected static final int MAX_MOVE_DISTANCE = 48;
     protected final ResidentPlugin plugin;
     protected final Zone zone;
-    protected final List<String> messageList;
+    protected final ZoneMessageList messageList;
     protected final Set<Vec3i> spawnBlocks = new HashSet<>();
     protected final Map<Vec2i, Set<Vec3i>> chunkBlockMap = new HashMap<>();
     protected int updateId = 0;
@@ -266,15 +270,33 @@ public final class Zoned {
     }
 
     protected void talkTo(Spawned spawned, Player player) {
+        // Cooldown
+        long now = System.currentTimeMillis();
+        Session session = plugin.session(player);
+        if (session.talkCooldown > now) return;
+        session.talkCooldown = now + 1000L;
+        // Stop Entity
         spawned.entity.getPathfinder().stopPathfinding();
-        spawned.moveCooldown = System.currentTimeMillis() + 5000L;
+        spawned.moveCooldown = now + 5000L;
         spawned.entity.lookAt(player);
+        player.playSound(spawned.entity.getEyeLocation(), Sound.ENTITY_VILLAGER_TRADE, SoundCategory.NEUTRAL,
+                         1.0f, 1.0f);
+        // Message
         if (spawned.messageIndex < 0 || spawned.messageIndex >= messageList.size()) return;
-        String message = messageList.get(spawned.messageIndex);
+        ZoneMessage message = messageList.get(spawned.messageIndex);
+        if (session.talkingTo == spawned) {
+            session.lineIndex += 1;
+            if (session.lineIndex >= message.size()) {
+                session.lineIndex = 0;
+            }
+        } else {
+            session.talkingTo = spawned;
+            session.lineIndex = 0;
+        }
         player.sendMessage(Component.join(JoinConfiguration.noSeparators(), new Component[] {
                     VanillaItems.EMERALD.component,
                     Component.text("Villager: ", NamedTextColor.GRAY),
-                    Component.text(message, NamedTextColor.WHITE),
+                    Component.text(message.getLine(session.lineIndex), NamedTextColor.WHITE),
                 }));
     }
 }

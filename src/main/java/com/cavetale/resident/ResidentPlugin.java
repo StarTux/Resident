@@ -1,6 +1,7 @@
 package com.cavetale.resident;
 
 import com.cavetale.core.util.Json;
+import com.cavetale.resident.message.ZoneMessageList;
 import com.cavetale.resident.save.Save;
 import com.cavetale.resident.save.Zone;
 import java.io.File;
@@ -10,8 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ResidentPlugin extends JavaPlugin {
@@ -23,6 +26,7 @@ public final class ResidentPlugin extends JavaPlugin {
     protected File saveFile;
     protected Random random = new Random();
     protected YamlConfiguration messagesConfig;
+    protected final Map<UUID, Session> sessions = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -52,10 +56,16 @@ public final class ResidentPlugin extends JavaPlugin {
     protected void setupZones() {
         clear();
         for (Zone zone : save.getZones()) {
-            Zoned zoned = new Zoned(this, zone, messagesConfig.getStringList(zone.getName()));
-            zonedMap.put(zone.getName(), zoned);
-            zoned.updateSpawnBlocks();
+            enableZone(zone);
         }
+    }
+
+    protected void enableZone(Zone zone) {
+        @SuppressWarnings("unchecked")
+        List<Object> objectList = (List<Object>) messagesConfig.getList(zone.getName());
+        Zoned zoned = new Zoned(this, zone, ZoneMessageList.ofConfig(objectList));
+        zonedMap.put(zone.getName(), zoned);
+        zoned.updateSpawnBlocks();
     }
 
     protected void clear() {
@@ -99,5 +109,9 @@ public final class ResidentPlugin extends JavaPlugin {
             zoned.spawn();
             zoned.move();
         }
+    }
+
+    protected Session session(Player player) {
+        return sessions.computeIfAbsent(player.getUniqueId(), uuid -> new Session());
     }
 }
