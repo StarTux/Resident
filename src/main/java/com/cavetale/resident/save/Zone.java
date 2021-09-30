@@ -11,6 +11,7 @@ import org.bukkit.Location;
  */
 @Data
 public final class Zone {
+    public static final Zone NULL = new Zone("", "");
     protected String name;
     protected ZoneType type = ZoneType.NONE;
     protected String world;
@@ -33,5 +34,9 @@ public final class Zone {
             if (cuboid.contains(x, y, z)) return true;
         }
         return false;
+    }
+
+    public boolean isNull() {
+        return equals(NULL);
     }
 }

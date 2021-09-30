@@ -6,17 +6,21 @@ import com.cavetale.core.command.CommandContext;
 import com.cavetale.core.command.CommandNode;
 import com.cavetale.core.command.CommandWarn;
 import com.cavetale.resident.save.Cuboid;
+import com.cavetale.resident.save.Loc;
 import com.cavetale.resident.save.Zone;
 import com.cavetale.resident.util.WorldEdit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
     protected ResidentCommand(final ResidentPlugin plugin) {
@@ -65,6 +69,23 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             .description("Highlight zone regions")
             .completers(this::completeZoneNames)
             .playerCaller(this::regionHighlight);
+        // PluginSpawn
+        CommandNode pluginSpawnNode = rootNode.addChild("pluginspawn")
+            .description("Plugin spawn commands");
+        pluginSpawnNode.addChild("List").denyTabCompletion()
+            .description("List plugin spawns")
+            .senderCaller(this::pluginSpawnList);
+        pluginSpawnNode.addChild("clear").arguments("[plugin]")
+            .description("Clear plugin spawns")
+            .completers(CommandArgCompleter.supplyStream(() -> {
+                        return Stream.of(Bukkit.getPluginManager().getPlugins())
+                            .map(Plugin::getName);
+                    }))
+            .senderCaller(this::pluginSpawnClear);
+        pluginSpawnNode.addChild("add").arguments("<type>")
+            .description("Add plugin spawn")
+            .completers(CommandArgCompleter.enumLowerList(ZoneType.class))
+            .playerCaller(this::pluginSpawnAdd);
     }
 
     private boolean reload(CommandSender sender, String[] args) {
@@ -216,6 +237,43 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             region.highlight(zoned.getWorld(), player);
         }
         player.sendMessage(Component.text("Highlighting " + zoned.zone.getName(), NamedTextColor.YELLOW));
+        return true;
+    }
+
+    private boolean pluginSpawnList(CommandSender sender, String[] args) {
+        if (args.length != 0) return false;
+        sender.sendMessage(Component.text("Total " + plugin.pluginSpawns.size() + " plugin spawns",
+                                          NamedTextColor.YELLOW));
+        for (PluginSpawn pluginSpawn : plugin.pluginSpawns) {
+            sender.sendMessage(Component.text("- " + pluginSpawn.plugin.getName()
+                                              + " " + pluginSpawn.type.name().toLowerCase()
+                                              + " " + pluginSpawn.loc
+                                              + " spawned=" + pluginSpawn.isSpawned()));
+        }
+        return true;
+    }
+
+    private boolean pluginSpawnClear(CommandSender sender, String[] args) {
+        if (args.length > 1) return false;
+        Plugin thePlugin = args.length >= 1
+            ? Bukkit.getPluginManager().getPlugin(args[0])
+            : plugin;
+        if (thePlugin == null) {
+            throw new CommandWarn("Plugin not found: " + args[0]);
+        }
+        plugin.clearPluginSpawns(thePlugin);
+        sender.sendMessage(Component.text("Spawns of " + thePlugin.getName() + " cleared!", NamedTextColor.YELLOW));
+        return true;
+    }
+
+    private boolean pluginSpawnAdd(Player player, String[] args) {
+        if (args.length != 1) return false;
+        PluginSpawn pluginSpawn = new PluginSpawn(plugin,
+                                                  requireZoneType(args[0]),
+                                                  Loc.of(player.getLocation()),
+                                                  p -> p.sendMessage("Hello World"));
+        pluginSpawn.register();
+        player.sendMessage(Component.text("Plugin spawn added at your current location", NamedTextColor.YELLOW));
         return true;
     }
 

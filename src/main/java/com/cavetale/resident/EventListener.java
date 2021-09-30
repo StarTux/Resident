@@ -22,6 +22,7 @@ import org.bukkit.event.entity.VillagerCareerChangeEvent;
 import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.server.PluginDisableEvent;
 
 @RequiredArgsConstructor
 public final class EventListener implements Listener {
@@ -41,6 +42,10 @@ public final class EventListener implements Listener {
     @EventHandler
     private void onEntityRemoveFromWorld(EntityRemoveFromWorldEvent event) {
         Spawned spawned = plugin.spawnedMap.remove(event.getEntity().getEntityId());
+        if (spawned == null) return;
+        if (spawned.pluginSpawn != null) {
+            spawned.pluginSpawn.spawned = null;
+        }
     }
 
     @EventHandler
@@ -64,9 +69,15 @@ public final class EventListener implements Listener {
     private void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Spawned spawned = handleEventEntity(event.getRightClicked(), event);
         if (spawned == null) return;
-        Zoned zoned = plugin.zonedMap.get(spawned.zone.getName());
-        if (zoned == null) return;
-        zoned.talkTo(spawned, event.getPlayer());
+        if (!spawned.zone.isNull()) {
+            Zoned zoned = plugin.zonedMap.get(spawned.zone.getName());
+            if (zoned == null) return;
+            zoned.talkTo(spawned, event.getPlayer());
+            return;
+        }
+        if (spawned.pluginSpawn != null) {
+            spawned.pluginSpawn.click(event.getPlayer());
+        }
     }
 
     @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
@@ -74,9 +85,17 @@ public final class EventListener implements Listener {
         Spawned spawned = handleEventEntity(event.getEntity(), event);
         if (spawned == null) return;
         if (!(event.getDamager() instanceof Player)) return;
-        Zoned zoned = plugin.zonedMap.get(spawned.zone.getName());
-        if (zoned == null) return;
-        zoned.talkTo(spawned, (Player) event.getDamager());
+        Player player = (Player) event.getDamager();
+        if (!spawned.zone.isNull()) {
+            Zoned zoned = plugin.zonedMap.get(spawned.zone.getName());
+            if (zoned == null) return;
+            zoned.talkTo(spawned, player);
+            return;
+        }
+        if (spawned.pluginSpawn != null) {
+            spawned.pluginSpawn.click(player);
+            return;
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -125,4 +144,9 @@ public final class EventListener implements Listener {
         plugin.sessions.remove(event.getPlayer().getUniqueId());
     }
 
+
+    @EventHandler
+    void onPluginDisable(PluginDisableEvent event) {
+        plugin.clearPluginSpawns(event.getPlugin());
+    }
 }

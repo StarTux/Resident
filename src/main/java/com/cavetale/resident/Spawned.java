@@ -17,6 +17,7 @@ public final class Spawned {
     protected long moveCooldown;
     protected Vec3i movingTo;
     protected boolean pathing;
+    protected PluginSpawn pluginSpawn;
 
     public Vec3i getEntityVector() {
         return movingTo != null

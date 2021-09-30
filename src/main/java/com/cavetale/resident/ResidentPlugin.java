@@ -21,9 +21,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ResidentPlugin extends JavaPlugin {
+    protected static ResidentPlugin instance;
     protected ResidentCommand residentCommand = new ResidentCommand(this);
     protected EventListener eventListener = new EventListener(this);
     protected Save save;
@@ -34,6 +36,12 @@ public final class ResidentPlugin extends JavaPlugin {
     protected YamlConfiguration messagesConfig;
     protected final Map<UUID, Session> sessions = new HashMap<>();
     protected List<ItemStack> halloweenSkulls; // lazy loaded
+    protected List<PluginSpawn> pluginSpawns = new ArrayList<>();
+
+    @Override
+    public void onLoad() {
+        instance = this;
+    }
 
     @Override
     public void onEnable() {
@@ -65,6 +73,7 @@ public final class ResidentPlugin extends JavaPlugin {
         for (Zone zone : save.getZones()) {
             enableZone(zone);
         }
+        clearPluginSpawns();
     }
 
     protected void enableZone(Zone zone) {
@@ -116,6 +125,9 @@ public final class ResidentPlugin extends JavaPlugin {
             zoned.spawn();
             zoned.move();
         }
+        for (PluginSpawn pluginSpawn : pluginSpawns) {
+            pluginSpawn.spawn();
+        }
     }
 
     protected Session session(Player player) {
@@ -153,5 +165,25 @@ public final class ResidentPlugin extends JavaPlugin {
             halloweenSkulls = result;
         }
         return halloweenSkulls;
+    }
+
+    protected void clearPluginSpawns() {
+        for (PluginSpawn pluginSpawn : pluginSpawns) {
+            pluginSpawn.despawn();
+        }
+        pluginSpawns.clear();
+    }
+
+    protected void clearPluginSpawns(Plugin plugin) {
+        List<PluginSpawn> removePluginSpawns = new ArrayList<>();
+        for (PluginSpawn pluginSpawn : pluginSpawns) {
+            if (pluginSpawn.plugin == plugin) {
+                removePluginSpawns.add(pluginSpawn);
+            }
+        }
+        for (PluginSpawn pluginSpawn : removePluginSpawns) {
+            pluginSpawn.despawn();
+            pluginSpawns.remove(pluginSpawn);
+        }
     }
 }
