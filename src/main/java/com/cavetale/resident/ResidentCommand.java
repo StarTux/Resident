@@ -72,7 +72,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         // PluginSpawn
         CommandNode pluginSpawnNode = rootNode.addChild("pluginspawn")
             .description("Plugin spawn commands");
-        pluginSpawnNode.addChild("List").denyTabCompletion()
+        pluginSpawnNode.addChild("list").denyTabCompletion()
             .description("List plugin spawns")
             .senderCaller(this::pluginSpawnList);
         pluginSpawnNode.addChild("clear").arguments("[plugin]")
@@ -268,11 +268,10 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
 
     private boolean pluginSpawnAdd(Player player, String[] args) {
         if (args.length != 1) return false;
-        PluginSpawn pluginSpawn = new PluginSpawn(plugin,
-                                                  requireZoneType(args[0]),
-                                                  Loc.of(player.getLocation()),
-                                                  p -> p.sendMessage("Hello World"));
-        pluginSpawn.register();
+        PluginSpawn pluginSpawn = PluginSpawn.register(plugin,
+                                                       requireZoneType(args[0]),
+                                                       Loc.of(player.getLocation()));
+        pluginSpawn.setOnPlayerClick(p -> p.sendMessage("Hello World"));
         player.sendMessage(Component.text("Plugin spawn added at your current location", NamedTextColor.YELLOW));
         return true;
     }

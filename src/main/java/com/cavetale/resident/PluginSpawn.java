@@ -5,6 +5,7 @@ import com.cavetale.resident.save.Zone;
 import java.util.function.Consumer;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -14,7 +15,7 @@ public final class PluginSpawn {
     @NonNull public final Plugin plugin;
     @NonNull public final ZoneType type;
     @NonNull public final Loc loc;
-    public final Consumer<Player> onPlayerClick;
+    @Setter protected Consumer<Player> onPlayerClick;
     protected Spawned spawned;
 
     public static void clear(Plugin thePlugin) {
@@ -23,6 +24,12 @@ public final class PluginSpawn {
 
     public void register() {
         ResidentPlugin.instance.pluginSpawns.add(this);
+    }
+
+    public static PluginSpawn register(final Plugin plugin, final ZoneType type, final Loc loc) {
+        PluginSpawn result = new PluginSpawn(plugin, type, loc);
+        result.register();
+        return result;
     }
 
     public void unregister() {
