@@ -12,6 +12,7 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Villager;
+import org.bukkit.inventory.ItemStack;
 
 public enum ZoneType {
     NONE {
@@ -27,7 +28,7 @@ public enum ZoneType {
         }
     },
     SPAWN {
-        private List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
+        private final List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
             .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
@@ -40,7 +41,7 @@ public enum ZoneType {
         }
     },
     BAZAAR {
-        private List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
+        private final List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
             .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
@@ -53,7 +54,7 @@ public enum ZoneType {
         }
     },
     WITCH {
-        private List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
+        private final List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
             .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
@@ -66,19 +67,37 @@ public enum ZoneType {
         }
     },
     DWARVEN {
-        private List<Villager.Profession> professions = List.of(Villager.Profession.ARMORER,
-                                                                Villager.Profession.CARTOGRAPHER,
-                                                                Villager.Profession.LIBRARIAN,
-                                                                Villager.Profession.MASON,
-                                                                Villager.Profession.TOOLSMITH,
-                                                                Villager.Profession.WEAPONSMITH);
-        private List<Villager.Type> types = List.of(Villager.Type.values());
+        private final List<Villager.Profession> professions = List.of(Villager.Profession.ARMORER,
+                                                                      Villager.Profession.CARTOGRAPHER,
+                                                                      Villager.Profession.LIBRARIAN,
+                                                                      Villager.Profession.MASON,
+                                                                      Villager.Profession.TOOLSMITH,
+                                                                      Villager.Profession.WEAPONSMITH);
+        private final List<Villager.Type> types = List.of(Villager.Type.values());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
             return location.getWorld().spawn(location, Villager.class, e -> {
                     prepMob(e, consumer);
                     e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
                     e.setVillagerType(types.get(plugin.random.nextInt(types.size())));
                     e.setVillagerLevel(1 + plugin.random.nextInt(5));
+                });
+        }
+    },
+    HALLOWEEN {
+        private final List<Villager.Profession> professions = List.of(Villager.Profession.NONE,
+                                                                      Villager.Profession.NITWIT,
+                                                                      Villager.Profession.CLERIC);
+        @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
+            return location.getWorld().spawn(location, Villager.class, e -> {
+                    prepMob(e, consumer);
+                    e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
+                    e.setVillagerType(Villager.Type.PLAINS);
+                    e.setVillagerLevel(1);
+                    List<ItemStack> skulls = plugin.getHalloweenSkulls();
+                    if (!skulls.isEmpty()) {
+                        ItemStack skull = skulls.get(plugin.random.nextInt(skulls.size()));
+                        e.getEquipment().setHelmet(skull);
+                    }
                 });
         }
     };

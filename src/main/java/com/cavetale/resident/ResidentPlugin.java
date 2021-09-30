@@ -4,7 +4,10 @@ import com.cavetale.core.util.Json;
 import com.cavetale.resident.message.ZoneMessageList;
 import com.cavetale.resident.save.Save;
 import com.cavetale.resident.save.Zone;
+import com.destroystokyo.paper.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.ProfileProperty;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,8 +16,11 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ResidentPlugin extends JavaPlugin {
@@ -27,6 +33,7 @@ public final class ResidentPlugin extends JavaPlugin {
     protected Random random = new Random();
     protected YamlConfiguration messagesConfig;
     protected final Map<UUID, Session> sessions = new HashMap<>();
+    protected List<ItemStack> halloweenSkulls; // lazy loaded
 
     @Override
     public void onEnable() {
@@ -113,5 +120,38 @@ public final class ResidentPlugin extends JavaPlugin {
 
     protected Session session(Player player) {
         return sessions.computeIfAbsent(player.getUniqueId(), uuid -> new Session());
+    }
+
+    public ItemStack makeSkull(String name, String texture, String signature) {
+        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        item.editMeta(m -> {
+                SkullMeta meta = (SkullMeta) m;
+                PlayerProfile profile = Bukkit.getServer().createProfile(UUID.randomUUID(), name);
+                ProfileProperty prop = new ProfileProperty("textures", texture, signature);
+                profile.setProperty(prop);
+                meta.setPlayerProfile(profile);
+            });
+        return item;
+    }
+
+    protected List<ItemStack> getHalloweenSkulls() {
+        if (halloweenSkulls == null) {
+            getLogger().info("Loading halloween skulls");
+            List<ItemStack> result = new ArrayList<>();
+            InputStreamReader input = new InputStreamReader(getResource("halloween.yml"));
+            YamlConfiguration config = YamlConfiguration.loadConfiguration(input);
+            for (String key : config.getKeys(false)) {
+                String texture = config.getString(key + ".texture");
+                if (texture == null) {
+                    getLogger().info("Texture key is null: " + key);
+                    continue;
+                }
+                String signature = config.getString(key + ".signature");
+                ItemStack skull = makeSkull(key, texture, signature);
+                result.add(skull);
+            }
+            halloweenSkulls = result;
+        }
+        return halloweenSkulls;
     }
 }
