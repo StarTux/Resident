@@ -7,6 +7,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -63,5 +64,9 @@ public final class PluginSpawn {
 
     public boolean isSpawned() {
         return spawned != null;
+    }
+
+    public Entity getEntity() {
+        return spawned != null ? spawned.entity : null;
     }
 }
