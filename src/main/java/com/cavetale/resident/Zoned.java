@@ -240,23 +240,6 @@ public final class Zoned {
             spawned.entity.remove(); // modifies spawnedMap?
             return;
         }
-        // Move away from others
-        List<Spawned> spawnedList = plugin.findSpawned(zone);
-        List<Vec3i> spawnedVectorList = new ArrayList<>(spawnedList.size());
-        for (Spawned other : spawnedList) {
-            if (other == spawned) continue;
-            spawnedVectorList.add(other.getEntityVector());
-        }
-        if (!spawnedVectorList.isEmpty()) {
-            // Remove vectors too close to other spawneds!
-            loadedBlockList.removeIf(it -> {
-                    for (Vec3i otherVector : spawnedVectorList) {
-                        if (otherVector.maxDistance(it) < SPAWN_DISTANCE) return true;
-                    }
-                    return false;
-                });
-            if (loadedBlockList.isEmpty()) return;
-        }
         // Move!
         Vec3i targetVector = loadedBlockList.get(plugin.random.nextInt(loadedBlockList.size()));
         Block block = targetVector.toBlock(world);
