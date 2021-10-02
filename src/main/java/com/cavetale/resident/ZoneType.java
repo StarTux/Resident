@@ -106,7 +106,6 @@ public enum ZoneType {
 
     private static void prepMob(Mob mob, Consumer<Mob> cons) {
         mob.setPersistent(false);
-        mob.setRemoveWhenFarAway(true);
         cons.accept(mob);
         Bukkit.getMobGoals().removeAllGoals(mob);
         AttributeInstance movementSpeed = mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
