@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -68,5 +69,13 @@ public final class PluginSpawn {
 
     public Entity getEntity() {
         return spawned != null ? spawned.entity : null;
+    }
+
+    public boolean pathing(Consumer<Mob> consumer) {
+        if (spawned == null) return false;
+        spawned.pathing = true;
+        consumer.accept(spawned.entity);
+        spawned.pathing = false;
+        return true;
     }
 }
