@@ -78,4 +78,13 @@ public final class PluginSpawn {
         spawned.pathing = false;
         return true;
     }
+
+    public boolean teleport(Location location) {
+        if (spawned == null) return false;
+        return spawned.entity.teleport(location);
+    }
+
+    public boolean teleportHome() {
+        return teleport(loc.toLocation());
+    }
 }
