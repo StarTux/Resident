@@ -219,10 +219,9 @@ public final class Zoned {
         long now = System.currentTimeMillis();
         World world = Bukkit.getWorld(zone.getWorld());
         if (world == null) return;
-        long then = now - 2000L;
         List<Spawned> spawnedList = plugin.findSpawned(zone);
         for (Spawned spawned : spawnedList) {
-            if (spawned.lastMoved > then) continue;
+            if (spawned.lastMoved > now - 10000L) continue;
             if (spawned.moveCooldown > now) continue;
             spawned.moveCooldown = now + 5000L;
             move(spawned, world);
