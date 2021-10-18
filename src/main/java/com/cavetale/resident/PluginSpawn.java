@@ -18,6 +18,7 @@ public final class PluginSpawn {
     @NonNull public final ZoneType type;
     @NonNull public final Loc loc;
     @Setter protected Consumer<Player> onPlayerClick;
+    @Setter protected Consumer<Mob> onMobSpawning;
     protected Spawned spawned;
 
     public static void clear(Plugin thePlugin) {
@@ -48,6 +49,9 @@ public final class PluginSpawn {
                 spawned = new Spawned(e, Zone.NULL, -1);
                 spawned.pluginSpawn = this;
                 ResidentPlugin.instance.spawnedMap.put(entityId, spawned);
+                if (onMobSpawning != null) {
+                    onMobSpawning.accept(e);
+                }
             });
     }
 
