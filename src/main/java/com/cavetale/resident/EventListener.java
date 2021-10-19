@@ -1,6 +1,7 @@
 package com.cavetale.resident;
 
 import com.cavetale.core.event.entity.PlayerEntityAbilityQuery;
+import com.cavetale.resident.save.Vec3i;
 import com.destroystokyo.paper.event.entity.EntityPathfindEvent;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import io.papermc.paper.event.entity.EntityMoveEvent;
@@ -48,10 +49,14 @@ public final class EventListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     private void onEntityMove(EntityMoveEvent event) {
         Spawned spawned = handleEventEntity(event.getEntity(), null); // do not cancel!
         if (spawned == null) return;
+        Vec3i vec = Vec3i.of(event.getTo());
+        if (spawned.lastMovedVec != null
+            && vec.maxHorizontalDistance(spawned.lastMovedVec) == 0) return;
+        spawned.lastMovedVec = vec;
         spawned.lastMoved = System.currentTimeMillis();
     }
 

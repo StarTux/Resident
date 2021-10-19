@@ -24,6 +24,10 @@ public final class Vec3i {
         return new Vec3i(location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
+    public Vec3i add(int dx, int dy, int dz) {
+        return of(x + dx, y + dy, z + dz);
+    }
+
     public Block toBlock(World w) {
         return w.getBlockAt(x, y, z);
     }
@@ -36,6 +40,11 @@ public final class Vec3i {
         return Math.max(Math.abs(other.x - x),
                         Math.max(Math.abs(other.y - y),
                                  Math.abs(other.z - z)));
+    }
+
+    public int maxHorizontalDistance(Vec3i other) {
+        return Math.max(Math.abs(other.x - x),
+                        Math.abs(other.z - z));
     }
 
     public boolean gte(Vec3i other) {

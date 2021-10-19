@@ -14,6 +14,7 @@ public final class Spawned {
     protected final Zone zone;
     protected final int messageIndex;
     protected long lastMoved;
+    protected Vec3i lastMovedVec;
     protected long moveCooldown;
     protected Vec3i movingTo;
     protected boolean pathing;

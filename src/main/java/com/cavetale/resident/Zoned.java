@@ -7,6 +7,7 @@ import com.cavetale.resident.save.Cuboid;
 import com.cavetale.resident.save.Vec2i;
 import com.cavetale.resident.save.Vec3i;
 import com.cavetale.resident.save.Zone;
+import com.destroystokyo.paper.entity.Pathfinder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,8 +38,8 @@ import org.bukkit.entity.Player;
 public final class Zoned {
     protected static final int SPAWN_DISTANCE = 8;
     protected static final int PLAYER_DISTANCE = 16;
-    protected static final int MIN_MOVE_DISTANCE = 8;
-    protected static final int MAX_MOVE_DISTANCE = 48;
+    protected static final int MIN_MOVE_DISTANCE = 2;
+    protected static final int MAX_MOVE_DISTANCE = 32;
     protected final ResidentPlugin plugin;
     protected final Zone zone;
     protected final ZoneMessageList messageList;
@@ -221,7 +222,7 @@ public final class Zoned {
         if (world == null) return;
         List<Spawned> spawnedList = plugin.findSpawned(zone);
         for (Spawned spawned : spawnedList) {
-            if (spawned.lastMoved > now - 10000L) continue;
+            if (spawned.lastMoved > now - 2000L) continue;
             if (spawned.moveCooldown > now) continue;
             spawned.moveCooldown = now + 5000L;
             move(spawned, world);
@@ -243,15 +244,26 @@ public final class Zoned {
         Vec3i targetVector = loadedBlockList.get(plugin.random.nextInt(loadedBlockList.size()));
         Block block = targetVector.toBlock(world);
         if (!canSpawnOnBlock(block)) return;
-        spawned.movingTo = targetVector;
         Location location = block.getLocation().add(0.5, 1.0, 0.5);
         spawned.pathing = true;
-        if (spawned.entity.getLocation().getBlock().isLiquid()) {
-            spawned.entity.getPathfinder().moveTo(location, 1.0);
-        } else {
-            spawned.entity.getPathfinder().moveTo(location, 0.5);
+        if (null != findPath(spawned.entity, location)) {
+            spawned.movingTo = targetVector;
         }
         spawned.pathing = false;
+    }
+
+    private Pathfinder.PathResult findPath(Mob entity, Location target) {
+        Pathfinder pathfinder = entity.getPathfinder();
+        Pathfinder.PathResult pathResult = pathfinder.findPath(target);
+        if (pathResult == null) return null;
+        for (Location location : pathResult.getPoints()) {
+            Vec3i vec = Vec3i.of(location);
+            if (!spawnBlocks.contains(vec) && !spawnBlocks.contains(vec.add(0, -1, 0))) {
+                return null;
+            }
+        }
+        pathfinder.moveTo(pathResult, 0.5);
+        return pathResult;
     }
 
     public boolean contains(Location location) {
