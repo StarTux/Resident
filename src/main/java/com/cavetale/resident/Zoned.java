@@ -246,7 +246,11 @@ public final class Zoned {
         spawned.movingTo = targetVector;
         Location location = block.getLocation().add(0.5, 1.0, 0.5);
         spawned.pathing = true;
-        spawned.entity.getPathfinder().moveTo(location, 1.0);
+        if (spawned.entity.getLocation().getBlock().isLiquid()) {
+            spawned.entity.getPathfinder().moveTo(location, 1.0);
+        } else {
+            spawned.entity.getPathfinder().moveTo(location, 0.5);
+        }
         spawned.pathing = false;
     }
 

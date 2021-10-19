@@ -109,7 +109,7 @@ public enum ZoneType {
         cons.accept(mob);
         Bukkit.getMobGoals().removeAllGoals(mob);
         AttributeInstance movementSpeed = mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
-        movementSpeed.setBaseValue(0.25);
+        movementSpeed.setBaseValue(0.5);
         for (AttributeModifier it : new ArrayList<>(movementSpeed.getModifiers())) {
             movementSpeed.removeModifier(it);
         }
