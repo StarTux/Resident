@@ -28,14 +28,14 @@ public final class ResidentPlugin extends JavaPlugin {
     protected static ResidentPlugin instance;
     protected ResidentCommand residentCommand = new ResidentCommand(this);
     protected EventListener eventListener = new EventListener(this);
-    protected Save save;
     protected final Map<Integer, Spawned> spawnedMap = new HashMap<>();
     protected final Map<String, Zoned> zonedMap = new HashMap<>();
-    protected File saveFile;
+    protected File legacySaveFile;
+    protected File zonesFolder;
     protected Random random = new Random();
     protected YamlConfiguration messagesConfig;
     protected final Map<UUID, Session> sessions = new HashMap<>();
-    protected List<ItemStack> halloweenSkulls; // lazy loaded
+    private List<ItemStack> halloweenSkulls; // lazy loaded
     protected List<PluginSpawn> pluginSpawns = new ArrayList<>();
 
     @Override
@@ -45,35 +45,77 @@ public final class ResidentPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveFile = new File(getDataFolder(), "save.json");
+        legacySaveFile = new File(getDataFolder(), "save.json");
+        zonesFolder = new File(getDataFolder(), "zones");
         residentCommand.enable();
         eventListener.enable();
-        load();
-        setupZones();
+        loadZones();
         Bukkit.getScheduler().runTaskTimer(this, this::tick, 20L, 20L);
     }
 
     @Override
     public void onDisable() {
-        clear();
+        clearZones();
+        clearPluginSpawns();
     }
 
-    protected void load() {
-        save = Json.load(saveFile, Save.class, Save::new);
+
+    protected void loadZones() {
+        clearZones();
+        List<Zone> zones = new ArrayList<>();
+        // Legacy
+        if (legacySaveFile.exists()) {
+            getLogger().info("Loading and deleting legacy save file...");
+            Save save = Json.load(legacySaveFile, Save.class);
+            if (save != null) {
+                for (Zone zone : save.getZones()) {
+                    zones.add(zone);
+                    saveZone(zone);
+                }
+            }
+            legacySaveFile.delete();
+        }
+        for (File zoneFile : zonesFolder.listFiles()) {
+            if (!zoneFile.isFile()) continue;
+            String name = zoneFile.getName();
+            if (!name.endsWith(".json")) continue;
+            name = name.substring(0, name.length() - 5);
+            Zone zone = Json.load(zoneFile, Zone.class);
+            if (zone == null) {
+                getLogger().warning("Invalid zone file: " + zoneFile);
+                continue;
+            }
+            zone.setName(name);
+            zones.add(zone);
+        }
         String messagePath = "messages.yml";
         File messageFile = new File(getDataFolder(), messagePath);
         if (!messageFile.exists()) {
             saveResource(messagePath, false);
         }
         messagesConfig = YamlConfiguration.loadConfiguration(messageFile);
-    }
-
-    protected void setupZones() {
-        clear();
-        for (Zone zone : save.getZones()) {
+        for (Zone zone : zones) {
             enableZone(zone);
         }
-        clearPluginSpawns();
+    }
+
+    protected void saveZone(Zone zone) {
+        if (zone.isNull()) throw new IllegalArgumentException("Zone is null!");
+        zonesFolder.mkdirs();
+        File zoneFile = new File(zonesFolder, zone.getName() + ".json");
+        Json.save(zoneFile, zone, true);
+    }
+
+    protected void clearZones() {
+        for (Zoned zoned : new ArrayList<>(zonedMap.values())) {
+            zoned.disable();
+        }
+        zonedMap.clear();
+        for (Spawned spawned : new ArrayList<>(spawnedMap.values())) {
+            if (spawned.hasZone()) {
+                spawned.entity.remove();
+            }
+        }
     }
 
     protected void enableZone(Zone zone) {
@@ -82,22 +124,6 @@ public final class ResidentPlugin extends JavaPlugin {
         Zoned zoned = new Zoned(this, zone, ZoneMessageList.ofConfig(objectList));
         zonedMap.put(zone.getName(), zoned);
         zoned.updateSpawnBlocks();
-    }
-
-    protected void clear() {
-        for (Zoned zoned : new ArrayList<>(zonedMap.values())) {
-            zoned.disable();
-        }
-        zonedMap.clear();
-        for (Spawned spawned : new ArrayList<>(spawnedMap.values())) {
-            spawned.entity.remove();
-        }
-        spawnedMap.clear();
-    }
-
-    protected void save() {
-        getDataFolder().mkdirs();
-        Json.save(saveFile, save, true);
     }
 
     public List<Spawned> findSpawned(Zone zone) {

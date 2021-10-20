@@ -89,8 +89,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
     }
 
     private boolean reload(CommandSender sender, String[] args) {
-        plugin.load();
-        plugin.setupZones();
+        plugin.loadZones();
         sender.sendMessage(Component.text("Save file reloaded.", NamedTextColor.YELLOW));
         return true;
     }
@@ -127,8 +126,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             throw new CommandWarn("Zone already exists: " + name);
         }
         Zone zone = new Zone(name, player.getWorld().getName());
-        plugin.save.getZones().add(zone);
-        plugin.save();
+        plugin.saveZone(zone);
         plugin.enableZone(zone);
         player.sendMessage(Component.text("Zone created in world " + zone.getWorld() + ": " + zone.getName()));
         return true;
@@ -139,8 +137,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         Zoned zoned = requireZoned(args[0]);
         ZoneType type = requireZoneType(args[1]);
         zoned.zone.setType(type);
-        plugin.save();
-        plugin.setupZones();
+        plugin.saveZone(zoned.zone);
         sender.sendMessage(Component.text("Set type of " + zoned.zone.getName() + " to " + type.name().toLowerCase(),
                                           NamedTextColor.YELLOW));
         return true;
@@ -151,7 +148,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         Zoned zoned = requireZoned(args[0]);
         int amount = requireInt(args[1], i -> i > 0);
         zoned.zone.setMaxResidents(amount);
-        plugin.save();
+        plugin.saveZone(zoned.zone);
         sender.sendMessage(Component.text("Set max residents of " + zoned.zone.getName() + " to " + amount,
                                           NamedTextColor.YELLOW));
         return true;
@@ -186,7 +183,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         }
         zoned.zone.getRegions().add(region);
         zoned.updateSpawnBlocks();
-        plugin.save();
+        plugin.saveZone(zoned.zone);
         player.sendMessage(Component.text("Region added to zone " + zoned.zone.getName()
                                           + ": " + region, NamedTextColor.YELLOW));
         return true;
@@ -217,7 +214,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         }
         zoned.zone.getRegions().removeAll(removeList);
         zoned.updateSpawnBlocks();
-        plugin.save();
+        plugin.saveZone(zoned.zone);
         player.sendMessage(Component.text(removeList.size() + " regions removed from zone " + zoned.zone.getName()
                                           + ": " + removeList, NamedTextColor.YELLOW));
         return true;

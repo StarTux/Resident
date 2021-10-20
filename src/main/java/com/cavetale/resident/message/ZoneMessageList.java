@@ -13,6 +13,7 @@ public final class ZoneMessageList {
     }
 
     public void loadConfig(List<Object> configList) {
+        if (configList == null) configList = List.of();
         for (Object item : configList) {
             if (item instanceof String) {
                 messages.add(new ZoneMessage(List.of((String) item)));

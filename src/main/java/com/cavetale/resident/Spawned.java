@@ -25,4 +25,8 @@ public final class Spawned {
             ? movingTo
             : Vec3i.of(entity.getLocation());
     }
+
+    public boolean hasZone() {
+        return !zone.isNull();
+    }
 }
