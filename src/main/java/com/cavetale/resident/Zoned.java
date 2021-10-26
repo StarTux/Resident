@@ -11,7 +11,6 @@ import com.destroystokyo.paper.entity.Pathfinder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -68,13 +67,15 @@ public final class Zoned {
         for (Cuboid cuboid : zone.getRegions()) {
             vectorSet.addAll(cuboid.all());
         }
+        Map<Vec2i, Set<Vec3i>> chunkBlocks = new HashMap<>();
         for (Vec3i vector : vectorSet) {
-            chunkBlockMap.computeIfAbsent(vector.toChunk(), u -> new HashSet<>()).add(vector);
+            Set<Vec3i> set = chunkBlocks.computeIfAbsent(vector.toChunk(), u -> new HashSet<>());
+            set.add(vector);
         }
-        for (Map.Entry<Vec2i, Set<Vec3i>> entry : new ArrayList<>(chunkBlockMap.entrySet())) {
+        for (Map.Entry<Vec2i, Set<Vec3i>> entry : chunkBlocks.entrySet()) {
             Vec2i chunkVector = entry.getKey();
             Set<Vec3i> chunkVectorSet = entry.getValue();
-            computeChunkSpawnBlocks(world, entry.getKey(), entry.getValue(), updateId);
+            computeChunkSpawnBlocks(world, chunkVector, chunkVectorSet, updateId);
         }
     }
 
@@ -87,20 +88,14 @@ public final class Zoned {
         return true;
     }
 
-    private void computeChunkSpawnBlocks(World world, Vec2i chunkVector, Set<Vec3i> vectorSet, final int id) {
+    private void computeChunkSpawnBlocks(World world, Vec2i chunkVector, Set<Vec3i> chunkVectorSet, final int id) {
         world.getChunkAtAsync(chunkVector.x, chunkVector.y, (Consumer<Chunk>) c -> {
                 if (id != this.updateId || disabled) return;
-                for (Iterator<Vec3i> iter = vectorSet.iterator(); iter.hasNext();) {
-                    Vec3i vector = iter.next();
-                    Block block = vector.toBlock(world);
-                    if (!canSpawnOnBlock(block)) {
-                        iter.remove();
-                        continue;
-                    } else {
-                        spawnBlocks.add(vector);
-                        loadedSpawnBlocks.add(vector);
-                        if (spawnBlocks.size() > 100000) return; // Magic number
-                    }
+                chunkVectorSet.removeIf(vector -> !canSpawnOnBlock(vector.toBlock(world)));
+                this.chunkBlockMap.put(chunkVector, chunkVectorSet);
+                this.spawnBlocks.addAll(chunkVectorSet);
+                if (world.isChunkLoaded(chunkVector.x, chunkVector.y)) {
+                    this.loadedSpawnBlocks.addAll(chunkVectorSet);
                 }
             });
     }
@@ -158,6 +153,15 @@ public final class Zoned {
         // Spawn!
         for (int i = 0; i < difference; i += 1) {
             Vec3i blockVector = loadedBlockList.remove(plugin.random.nextInt(loadedBlockList.size()));
+            Vec2i chunkVector = blockVector.toChunk();
+            if (!world.isChunkLoaded(chunkVector.x, chunkVector.y)) {
+                plugin.getLogger().warning(zone.getName() + ": Chunk not loaded: " + chunkVector);
+                Set<Vec3i> chunkBlocks = chunkBlockMap.get(chunkVector);
+                if (chunkBlocks != null) {
+                    loadedSpawnBlocks.removeAll(chunkBlocks);
+                }
+                return;
+            }
             Block block = blockVector.toBlock(world);
             if (!canSpawnOnBlock(block)) continue;
             spawn(block.getLocation().add(0.5, 1.0, 0.5));
