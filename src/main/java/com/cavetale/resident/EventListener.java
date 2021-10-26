@@ -1,12 +1,14 @@
 package com.cavetale.resident;
 
 import com.cavetale.core.event.entity.PlayerEntityAbilityQuery;
+import com.cavetale.resident.save.Vec2i;
 import com.cavetale.resident.save.Vec3i;
 import com.destroystokyo.paper.event.entity.EntityPathfindEvent;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import io.papermc.paper.event.entity.EntityMoveEvent;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -24,6 +26,8 @@ import org.bukkit.event.entity.VillagerReplenishTradeEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 
 @RequiredArgsConstructor
 public final class EventListener implements Listener {
@@ -153,5 +157,25 @@ public final class EventListener implements Listener {
     @EventHandler
     void onPluginDisable(PluginDisableEvent event) {
         plugin.clearPluginSpawns(event.getPlugin());
+    }
+
+    @EventHandler
+    void onChunkLoad(ChunkLoadEvent event) {
+        Chunk chunk = event.getChunk();
+        Vec2i chunkVector = Vec2i.of(chunk.getX(), chunk.getZ());
+        String chunkWorld = chunk.getWorld().getName();
+        for (Zoned zoned : plugin.zonedMap.values()) {
+            zoned.onChunkLoad(chunkWorld, chunkVector, true);
+        }
+    }
+
+    @EventHandler
+    void onChunkUnload(ChunkUnloadEvent event) {
+        Chunk chunk = event.getChunk();
+        Vec2i chunkVector = Vec2i.of(chunk.getX(), chunk.getZ());
+        String chunkWorld = chunk.getWorld().getName();
+        for (Zoned zoned : plugin.zonedMap.values()) {
+            zoned.onChunkLoad(chunkWorld, chunkVector, false);
+        }
     }
 }

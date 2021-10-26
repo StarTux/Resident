@@ -15,7 +15,6 @@ import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -105,17 +104,14 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         sender.sendMessage(Component.text("World " + zoned.zone.getWorld(), NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Regions " + zoned.zone.getRegions().size(), NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("SpawnBlocks " + zoned.spawnBlocks.size(), NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("LoadedSpawnBlocks " + zoned.loadedSpawnBlocks.size(), NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("SpawnChunks " + zoned.chunkBlockMap.size(), NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("UpdateId " + zoned.updateId, NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Disabled " + zoned.disabled, NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Messages " + zoned.messageList.size(), NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Max " + zoned.zone.getMaxResidents(), NamedTextColor.YELLOW));
         sender.sendMessage(Component.text("Total " + zoned.total, NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("Spawned " + plugin.countSpawned(zoned.zone) + " ", NamedTextColor.YELLOW)
-                           .append(Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.GRAY)),
-                                                  plugin.findSpawned(zoned.zone).stream()
-                                                  .map(spawned -> Component.text("(" + spawned.messageIndex + ")", NamedTextColor.GOLD))
-                                                  .collect(Collectors.toList()))));
+        sender.sendMessage(Component.text("Spawned " + plugin.countSpawned(zoned.zone), NamedTextColor.YELLOW));
         return true;
     }
 

@@ -37,13 +37,14 @@ import org.bukkit.entity.Player;
 @RequiredArgsConstructor
 public final class Zoned {
     protected static final int SPAWN_DISTANCE = 8;
-    protected static final int PLAYER_DISTANCE = 16;
-    protected static final int MIN_MOVE_DISTANCE = 2;
+    protected static final int PLAYER_DISTANCE = 24;
+    protected static final int MIN_MOVE_DISTANCE = 4;
     protected static final int MAX_MOVE_DISTANCE = 32;
     protected final ResidentPlugin plugin;
     protected final Zone zone;
     protected final ZoneMessageList messageList;
     protected final Set<Vec3i> spawnBlocks = new HashSet<>();
+    protected final Set<Vec3i> loadedSpawnBlocks = new HashSet<>();
     protected final Map<Vec2i, Set<Vec3i>> chunkBlockMap = new HashMap<>();
     protected int updateId = 0;
     protected int total = 0;
@@ -95,21 +96,13 @@ public final class Zoned {
                     if (!canSpawnOnBlock(block)) {
                         iter.remove();
                         continue;
+                    } else {
+                        spawnBlocks.add(vector);
+                        loadedSpawnBlocks.add(vector);
+                        if (spawnBlocks.size() > 100000) return; // Magic number
                     }
-                    spawnBlocks.add(vector);
-                    if (spawnBlocks.size() > 100000) return; // Magic number
                 }
             });
-    }
-
-    private Set<Vec3i> computeLoadedBlockSet(World world) {
-        Set<Vec3i> result = new HashSet<>();
-        for (Map.Entry<Vec2i, Set<Vec3i>> entry : chunkBlockMap.entrySet()) {
-            Vec2i chunkVector = entry.getKey();
-            if (!world.isChunkLoaded(chunkVector.x, chunkVector.y)) continue;
-            result.addAll(entry.getValue());
-        }
-        return result;
     }
 
     private Set<Vec3i> computePlayerVectorSet(World world) {
@@ -122,6 +115,10 @@ public final class Zoned {
     }
 
     protected void spawn() {
+        if (loadedSpawnBlocks.isEmpty()) {
+            total = -2;
+            return;
+        }
         World world = getWorld();
         if (world == null) {
             total = -3;
@@ -129,26 +126,11 @@ public final class Zoned {
         }
         int count = plugin.countSpawned(zone);
         if (count >= zone.getMaxResidents()) return;
-        List<Vec3i> loadedBlockList = new ArrayList<>(computeLoadedBlockSet(world));
+        List<Vec3i> loadedBlockList = new ArrayList<>(loadedSpawnBlocks);
         if (loadedBlockList.isEmpty()) {
-            total = -2;
-            return;
-        }
-        // Do not spawn too far from players.  We calculate this
-        // _before_ the total, so get back to player distances later.
-        final Set<Vec3i> playerVectorSet = computePlayerVectorSet(world);
-        if (playerVectorSet.isEmpty()) {
             total = -1;
             return;
         }
-        final int maxPlayerDistance = world.getViewDistance() * 16;
-        loadedBlockList.removeIf(it -> {
-                for (Vec3i playerVector : playerVectorSet) {
-                    if (it.maxDistance(playerVector) <= maxPlayerDistance) return false;
-                }
-                return true;
-            });
-        if (loadedBlockList.isEmpty()) return;
         // Total
         total = (int) Math.ceil((double) zone.getMaxResidents()
                                 * (((double) loadedBlockList.size())
@@ -156,9 +138,10 @@ public final class Zoned {
         final int difference = total - count;
         if (difference < 1) return;
         // Do not spawn too close to players
+        final Set<Vec3i> playerVectorSet = computePlayerVectorSet(world);
         loadedBlockList.removeIf(it -> {
                 for (Vec3i playerVector : playerVectorSet) {
-                    if (it.maxDistance(playerVector) < PLAYER_DISTANCE) return true;
+                    return it.maxDistance(playerVector) < PLAYER_DISTANCE;
                 }
                 return false;
             });
@@ -217,10 +200,11 @@ public final class Zoned {
     }
 
     protected void move() {
-        long now = System.currentTimeMillis();
         World world = Bukkit.getWorld(zone.getWorld());
         if (world == null) return;
         List<Spawned> spawnedList = plugin.findSpawned(zone);
+        if (spawnedList.isEmpty()) return;
+        long now = System.currentTimeMillis();
         for (Spawned spawned : spawnedList) {
             if (spawned.lastMoved > now - 2000L) continue;
             if (spawned.moveCooldown > now) continue;
@@ -231,7 +215,11 @@ public final class Zoned {
 
     private void move(Spawned spawned, World world) {
         Vec3i mobVector = Vec3i.of(spawned.entity.getLocation());
-        List<Vec3i> loadedBlockList = new ArrayList<>(computeLoadedBlockSet(world));
+        if (!spawnBlocks.contains(mobVector) && !spawnBlocks.contains(mobVector.add(0, -1, 0))) {
+            spawned.entity.remove();
+            return;
+        }
+        List<Vec3i> loadedBlockList = new ArrayList<>(loadedSpawnBlocks);
         loadedBlockList.removeIf(blockVector -> {
                 int distance = blockVector.maxDistance(mobVector);
                 return distance < MIN_MOVE_DISTANCE || distance > MAX_MOVE_DISTANCE;
@@ -299,5 +287,16 @@ public final class Zoned {
                     Component.text("Villager: ", NamedTextColor.GRAY),
                     Component.text(message.getLine(session.lineIndex), NamedTextColor.WHITE),
                 }));
+    }
+
+    protected void onChunkLoad(String chunkWorld, Vec2i chunkVector, boolean loaded) {
+        if (!chunkWorld.equals(zone.getWorld())) return;
+        Set<Vec3i> chunkBlocks = chunkBlockMap.get(chunkVector);
+        if (chunkBlocks == null) return;
+        if (loaded) {
+            loadedSpawnBlocks.addAll(chunkBlocks);
+        } else {
+            loadedSpawnBlocks.removeAll(chunkBlocks);
+        }
     }
 }
