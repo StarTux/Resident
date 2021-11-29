@@ -83,6 +83,17 @@ public enum ZoneType {
                 });
         }
     },
+    CHRISTMAS {
+        @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
+            return location.getWorld().spawn(location, Villager.class, e -> {
+                    prepMob(e, consumer);
+                    Villager.Profession[] professions = Villager.Profession.values();
+                    e.setProfession(professions[plugin.random.nextInt(professions.length)]);
+                    e.setVillagerType(Villager.Type.SNOW);
+                    e.setVillagerLevel(1 + plugin.random.nextInt(5));
+                });
+        }
+    },
     HALLOWEEN {
         private final List<Villager.Profession> professions = List.of(Villager.Profession.NONE,
                                                                       Villager.Profession.NITWIT,
