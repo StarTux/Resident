@@ -47,6 +47,7 @@ public final class ResidentPlugin extends JavaPlugin {
     public void onEnable() {
         legacySaveFile = new File(getDataFolder(), "save.json");
         zonesFolder = new File(getDataFolder(), "zones");
+        zonesFolder.mkdirs();
         residentCommand.enable();
         eventListener.enable();
         loadZones();
