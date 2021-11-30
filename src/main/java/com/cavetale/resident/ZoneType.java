@@ -1,5 +1,6 @@
 package com.cavetale.resident;
 
+import com.cavetale.mytems.Mytems;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -91,6 +92,14 @@ public enum ZoneType {
                     e.setProfession(professions[plugin.random.nextInt(professions.length)]);
                     e.setVillagerType(Villager.Type.SNOW);
                     e.setVillagerLevel(1 + plugin.random.nextInt(5));
+                    ItemStack hat;
+                    int roll = plugin.random.nextInt(2);
+                    switch (roll) {
+                    case 0: hat = Mytems.STOCKING_CAP.createItemStack(); break;
+                    case 1: hat = Mytems.SANTA_HAT.createItemStack(); break;
+                    default: throw new IllegalStateException("roll=" + roll);
+                    }
+                    e.getEquipment().setHelmet(hat);
                 });
         }
     },
