@@ -2,6 +2,7 @@ package com.cavetale.resident;
 
 import com.cavetale.mytems.Mytems;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -85,11 +86,17 @@ public enum ZoneType {
         }
     },
     CHRISTMAS {
+        private List<Villager.Profession> professions;
+
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
+            if (this.professions == null) {
+                EnumSet<Villager.Profession> set = EnumSet.allOf(Villager.Profession.class);
+                set.remove(Villager.Profession.FARMER);
+                this.professions = List.copyOf(set);
+            }
             return location.getWorld().spawn(location, Villager.class, e -> {
                     prepMob(e, consumer);
-                    Villager.Profession[] professions = Villager.Profession.values();
-                    e.setProfession(professions[plugin.random.nextInt(professions.length)]);
+                    e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
                     e.setVillagerType(Villager.Type.SNOW);
                     e.setVillagerLevel(1 + plugin.random.nextInt(5));
                     ItemStack hat;
