@@ -249,10 +249,10 @@ public final class Zoned {
         Pathfinder.PathResult pathResult = pathfinder.findPath(target);
         if (pathResult == null) return null;
         for (Location location : pathResult.getPoints()) {
-            Vec3i vec = Vec3i.of(location);
-            if (!spawnBlocks.contains(vec) && !spawnBlocks.contains(vec.add(0, -1, 0))) {
-                return null;
-            }
+            Block b1 = location.getBlock();
+            if (b1.isLiquid()) return null;
+            Block b2 = b1.getRelative(0, -1, 0);
+            if (b2.isLiquid()) return null;
         }
         pathfinder.moveTo(pathResult, 0.5);
         return pathResult;
