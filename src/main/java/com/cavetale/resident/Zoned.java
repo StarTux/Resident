@@ -29,6 +29,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.FixedMetadataValue;
 
 /**
  * This class represents the runtime object of a Zone.
@@ -201,6 +202,7 @@ public final class Zoned {
                 plugin.spawnedMap.put(entityId, spawned);
                 spawned.movingTo = Vec3i.of(location);
             });
+        entity.setMetadata("nomap", new FixedMetadataValue(plugin, true));
     }
 
     protected void move() {
