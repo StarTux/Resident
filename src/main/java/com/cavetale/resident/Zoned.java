@@ -1,6 +1,8 @@
 package com.cavetale.resident;
 
-import com.cavetale.core.font.VanillaItems;
+import com.cavetale.core.font.Emoji;
+import com.cavetale.core.font.GlyphPolicy;
+import com.cavetale.mytems.Mytems;
 import com.cavetale.resident.message.ZoneMessage;
 import com.cavetale.resident.message.ZoneMessageList;
 import com.cavetale.resident.save.Cuboid;
@@ -17,19 +19,26 @@ import java.util.Set;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.metadata.FixedMetadataValue;
+import static net.kyori.adventure.text.Component.join;
+import static net.kyori.adventure.text.Component.newline;
+import static net.kyori.adventure.text.Component.space;
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 /**
  * This class represents the runtime object of a Zone.
@@ -279,20 +288,23 @@ public final class Zoned {
         // Message
         if (spawned.messageIndex < 0 || spawned.messageIndex >= messageList.size()) return;
         ZoneMessage message = messageList.get(spawned.messageIndex);
-        if (session.talkingTo == spawned) {
-            session.lineIndex += 1;
-            if (session.lineIndex >= message.size()) {
-                session.lineIndex = 0;
-            }
-        } else {
-            session.talkingTo = spawned;
-            session.lineIndex = 0;
-        }
-        player.sendMessage(Component.join(JoinConfiguration.noSeparators(), new Component[] {
-                    VanillaItems.EMERALD.component,
-                    Component.text("Villager: ", NamedTextColor.GRAY),
-                    Component.text(message.getLine(session.lineIndex), NamedTextColor.WHITE),
-                }));
+        ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
+        book.editMeta(m -> {
+                BookMeta meta = (BookMeta) m;
+                List<Component> pages = new ArrayList<>();
+                for (int i = 0; i < message.size(); i += 1) {
+                    pages.add(join(noSeparators(),
+                                   Mytems.VILLAGER_FACE,
+                                   space(),
+                                   text("Villager", DARK_GREEN),
+                                   newline(), newline(),
+                                   Emoji.replaceText(text(message.getLine(i)), GlyphPolicy.HIDDEN)));
+                }
+                meta.author(text("Cavetale"));
+                meta.title(text("Resident"));
+                meta.pages(pages);
+            });
+        player.openBook(book);
     }
 
     protected void onChunkLoad(String chunkWorld, Vec2i chunkVector, boolean loaded) {
