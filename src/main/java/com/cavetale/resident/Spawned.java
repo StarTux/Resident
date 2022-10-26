@@ -1,6 +1,6 @@
 package com.cavetale.resident;
 
-import com.cavetale.resident.save.Vec3i;
+import com.cavetale.core.struct.Vec3i;
 import com.cavetale.resident.save.Zone;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Mob;

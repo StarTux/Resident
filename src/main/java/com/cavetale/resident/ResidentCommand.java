@@ -5,10 +5,9 @@ import com.cavetale.core.command.CommandArgCompleter;
 import com.cavetale.core.command.CommandContext;
 import com.cavetale.core.command.CommandNode;
 import com.cavetale.core.command.CommandWarn;
-import com.cavetale.resident.save.Cuboid;
+import com.cavetale.core.struct.Cuboid;
 import com.cavetale.resident.save.Loc;
 import com.cavetale.resident.save.Zone;
-import com.cavetale.resident.util.WorldEdit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntPredicate;
@@ -17,6 +16,7 @@ import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -173,10 +173,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         if (!player.getWorld().getName().equals(zoned.zone.getWorld())) {
             throw new CommandWarn("You're not in world " + zoned.zone.getWorld());
         }
-        Cuboid region = WorldEdit.getSelection(player);
-        if (region == null) {
-            throw new CommandWarn("You don't have a WorldEdit selection!");
-        }
+        Cuboid region = Cuboid.requireSelectionOf(player);
         zoned.zone.getRegions().add(region);
         zoned.updateSpawnBlocks();
         plugin.saveZone(zoned.zone);
@@ -195,10 +192,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         if (!player.getWorld().getName().equals(zoned.zone.getWorld())) {
             throw new CommandWarn("You're not in world " + zoned.zone.getWorld());
         }
-        Cuboid selection = WorldEdit.getSelection(player);
-        if (selection == null) {
-            throw new CommandWarn("You don't have a WorldEdit selection!");
-        }
+        Cuboid selection = Cuboid.requireSelectionOf(player);
         List<Cuboid> removeList = new ArrayList<>();
         for (Cuboid region : zoned.zone.getRegions()) {
             if (selection.contains(region)) {
@@ -227,7 +221,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             throw new CommandWarn("You're not in world " + zoned.zone.getWorld());
         }
         for (Cuboid region : zoned.zone.getRegions()) {
-            region.highlight(zoned.getWorld(), player);
+            region.highlight(zoned.getWorld(), 0.0, loc -> player.spawnParticle(Particle.END_ROD, loc, 1, 0.0, 0.0, 0.0, 0.0));
         }
         player.sendMessage(Component.text("Highlighting " + zoned.zone.getName(), NamedTextColor.YELLOW));
         return true;

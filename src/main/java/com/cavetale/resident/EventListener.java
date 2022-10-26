@@ -1,8 +1,8 @@
 package com.cavetale.resident;
 
 import com.cavetale.core.event.entity.PlayerEntityAbilityQuery;
-import com.cavetale.resident.save.Vec2i;
-import com.cavetale.resident.save.Vec3i;
+import com.cavetale.core.struct.Vec2i;
+import com.cavetale.core.struct.Vec3i;
 import com.destroystokyo.paper.event.entity.EntityPathfindEvent;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import io.papermc.paper.event.entity.EntityMoveEvent;
@@ -51,6 +51,8 @@ public final class EventListener implements Listener {
         if (spawned.pluginSpawn != null) {
             spawned.pluginSpawn.spawned = null;
         }
+        final Entity entity = event.getEntity();
+        Bukkit.getScheduler().runTask(plugin, () -> entity.remove());
     }
 
     @EventHandler(ignoreCancelled = true)

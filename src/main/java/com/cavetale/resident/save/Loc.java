@@ -1,5 +1,6 @@
 package com.cavetale.resident.save;
 
+import com.cavetale.core.struct.Vec2i;
 import lombok.Value;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -20,9 +21,17 @@ public final class Loc {
                        location.getYaw(), location.getPitch());
     }
 
+    public World getWorld() {
+        return Bukkit.getWorld(world);
+    }
+
     public Location toLocation() {
-        World w = Bukkit.getWorld(world);
+        World w = getWorld();
         if (w == null) return null;
+        return new Location(w, x, y, z, yaw, pitch);
+    }
+
+    public Location toLocation(World w) {
         return new Location(w, x, y, z, yaw, pitch);
     }
 

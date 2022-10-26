@@ -2,12 +2,12 @@ package com.cavetale.resident;
 
 import com.cavetale.core.font.Emoji;
 import com.cavetale.core.font.GlyphPolicy;
+import com.cavetale.core.struct.Cuboid;
+import com.cavetale.core.struct.Vec2i;
+import com.cavetale.core.struct.Vec3i;
 import com.cavetale.mytems.Mytems;
 import com.cavetale.resident.message.ZoneMessage;
 import com.cavetale.resident.message.ZoneMessageList;
-import com.cavetale.resident.save.Cuboid;
-import com.cavetale.resident.save.Vec2i;
-import com.cavetale.resident.save.Vec3i;
 import com.cavetale.resident.save.Zone;
 import com.destroystokyo.paper.entity.Pathfinder;
 import java.util.ArrayList;
@@ -75,11 +75,11 @@ public final class Zoned {
         if (world == null) return;
         Set<Vec3i> vectorSet = new HashSet<>();
         for (Cuboid cuboid : zone.getRegions()) {
-            vectorSet.addAll(cuboid.all());
+            vectorSet.addAll(cuboid.enumerate());
         }
         Map<Vec2i, Set<Vec3i>> chunkBlocks = new HashMap<>();
         for (Vec3i vector : vectorSet) {
-            Set<Vec3i> set = chunkBlocks.computeIfAbsent(vector.toChunk(), u -> new HashSet<>());
+            Set<Vec3i> set = chunkBlocks.computeIfAbsent(vector.blockToChunk(), u -> new HashSet<>());
             set.add(vector);
         }
         for (Map.Entry<Vec2i, Set<Vec3i>> entry : chunkBlocks.entrySet()) {
@@ -99,12 +99,12 @@ public final class Zoned {
     }
 
     private void computeChunkSpawnBlocks(World world, Vec2i chunkVector, Set<Vec3i> chunkVectorSet, final int id) {
-        world.getChunkAtAsync(chunkVector.x, chunkVector.y, (Consumer<Chunk>) c -> {
+        world.getChunkAtAsync(chunkVector.x, chunkVector.z, (Consumer<Chunk>) c -> {
                 if (id != this.updateId || disabled) return;
                 chunkVectorSet.removeIf(vector -> !canSpawnOnBlock(vector.toBlock(world)));
                 this.chunkBlockMap.put(chunkVector, chunkVectorSet);
                 this.spawnBlocks.addAll(chunkVectorSet);
-                if (world.isChunkLoaded(chunkVector.x, chunkVector.y)) {
+                if (world.isChunkLoaded(chunkVector.x, chunkVector.z)) {
                     this.loadedSpawnBlocks.addAll(chunkVectorSet);
                 }
             });
@@ -163,8 +163,8 @@ public final class Zoned {
         // Spawn!
         for (int i = 0; i < difference; i += 1) {
             Vec3i blockVector = loadedBlockList.remove(plugin.random.nextInt(loadedBlockList.size()));
-            Vec2i chunkVector = blockVector.toChunk();
-            if (!world.isChunkLoaded(chunkVector.x, chunkVector.y)) {
+            Vec2i chunkVector = blockVector.blockToChunk();
+            if (!world.isChunkLoaded(chunkVector.x, chunkVector.z)) {
                 plugin.getLogger().warning(zone.getName() + ": Chunk not loaded: " + chunkVector);
                 Set<Vec3i> chunkBlocks = chunkBlockMap.get(chunkVector);
                 if (chunkBlocks != null) {

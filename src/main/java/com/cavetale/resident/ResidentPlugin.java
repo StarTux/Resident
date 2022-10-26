@@ -30,7 +30,6 @@ public final class ResidentPlugin extends JavaPlugin {
     protected EventListener eventListener = new EventListener(this);
     protected final Map<Integer, Spawned> spawnedMap = new HashMap<>();
     protected final Map<String, Zoned> zonedMap = new HashMap<>();
-    protected File legacySaveFile;
     protected File zonesFolder;
     protected Random random = new Random();
     protected YamlConfiguration messagesConfig;
@@ -45,7 +44,6 @@ public final class ResidentPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        legacySaveFile = new File(getDataFolder(), "save.json");
         zonesFolder = new File(getDataFolder(), "zones");
         zonesFolder.mkdirs();
         residentCommand.enable();
@@ -64,18 +62,6 @@ public final class ResidentPlugin extends JavaPlugin {
     protected void loadZones() {
         clearZones();
         List<Zone> zones = new ArrayList<>();
-        // Legacy
-        if (legacySaveFile.exists()) {
-            getLogger().info("Loading and deleting legacy save file...");
-            Save save = Json.load(legacySaveFile, Save.class);
-            if (save != null) {
-                for (Zone zone : save.getZones()) {
-                    zones.add(zone);
-                    saveZone(zone);
-                }
-            }
-            legacySaveFile.delete();
-        }
         for (File zoneFile : zonesFolder.listFiles()) {
             if (!zoneFile.isFile()) continue;
             String name = zoneFile.getName();

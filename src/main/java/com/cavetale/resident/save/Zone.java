@@ -1,5 +1,6 @@
 package com.cavetale.resident.save;
 
+import com.cavetale.core.struct.Cuboid;
 import com.cavetale.resident.ZoneType;
 import java.util.ArrayList;
 import java.util.List;

@@ -1,5 +1,6 @@
 package com.cavetale.resident;
 
+import com.cavetale.core.struct.Vec2i;
 import com.cavetale.resident.save.Loc;
 import com.cavetale.resident.save.Zone;
 import java.util.function.Consumer;
@@ -7,6 +8,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
@@ -42,8 +44,23 @@ public final class PluginSpawn {
 
     public void spawn() {
         if (spawned != null) return;
-        Location location = loc.toLocation();
-        if (location == null || !location.isChunkLoaded()) return;
+        World w = loc.getWorld();
+        if (w == null) return;
+        Vec2i chunk = loc.toChunk();
+        if (!w.isChunkLoaded(chunk.x, chunk.z)) return;
+        boolean nearby = false;
+        final int viewDistance = w.getViewDistance();
+        for (Player player : w.getPlayers()) {
+            Location ploc = player.getLocation();
+            int dx = Math.abs(chunk.x - (ploc.getBlockX() >> 4));
+            if (dx > viewDistance) continue;
+            int dz = Math.abs(chunk.z - (ploc.getBlockZ() >> 4));
+            if (dz > viewDistance) continue;
+            nearby = true;
+            break;
+        }
+        if (!nearby) return;
+        Location location = loc.toLocation(w);
         type.spawn(ResidentPlugin.instance, location, e -> {
                 int entityId = e.getEntityId();
                 spawned = new Spawned(e, Zone.NULL, -1);
