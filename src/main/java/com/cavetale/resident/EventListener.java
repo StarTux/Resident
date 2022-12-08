@@ -23,6 +23,7 @@ import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.VillagerAcquireTradeEvent;
 import org.bukkit.event.entity.VillagerCareerChangeEvent;
 import org.bukkit.event.entity.VillagerReplenishTradeEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.PluginDisableEvent;
@@ -80,14 +81,15 @@ public final class EventListener implements Listener {
     private void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Spawned spawned = handleEventEntity(event.getRightClicked(), event);
         if (spawned == null) return;
+        final Player player = event.getPlayer();
         if (!spawned.zone.isNull()) {
             Zoned zoned = plugin.zonedMap.get(spawned.zone.getName());
             if (zoned == null) return;
-            zoned.talkTo(spawned, event.getPlayer());
+            zoned.talkTo(spawned, player);
             return;
         }
-        if (spawned.pluginSpawn != null) {
-            spawned.pluginSpawn.click(event.getPlayer());
+        if (spawned.pluginSpawn != null && player.getOpenInventory().getType() == InventoryType.CRAFTING) {
+            spawned.pluginSpawn.click(player);
         }
     }
 
@@ -103,9 +105,8 @@ public final class EventListener implements Listener {
             zoned.talkTo(spawned, player);
             return;
         }
-        if (spawned.pluginSpawn != null) {
+        if (spawned.pluginSpawn != null && player.getOpenInventory().getType() == InventoryType.CRAFTING) {
             spawned.pluginSpawn.click(player);
-            return;
         }
     }
 

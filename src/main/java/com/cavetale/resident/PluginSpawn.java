@@ -80,6 +80,7 @@ public final class PluginSpawn {
 
     public void click(Player player) {
         if (onPlayerClick != null) {
+            player.closeInventory();
             onPlayerClick.accept(player);
         }
     }

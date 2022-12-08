@@ -2,7 +2,6 @@ package com.cavetale.resident;
 
 import com.cavetale.core.util.Json;
 import com.cavetale.resident.message.ZoneMessageList;
-import com.cavetale.resident.save.Save;
 import com.cavetale.resident.save.Zone;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
