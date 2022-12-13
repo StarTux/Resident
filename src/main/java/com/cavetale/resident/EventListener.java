@@ -88,8 +88,12 @@ public final class EventListener implements Listener {
             zoned.talkTo(spawned, player);
             return;
         }
-        if (spawned.pluginSpawn != null && player.getOpenInventory().getType() == InventoryType.CRAFTING) {
-            spawned.pluginSpawn.click(player);
+        if (spawned.pluginSpawn != null) {
+            InventoryType it = player.getOpenInventory().getType();
+            if (it == InventoryType.CRAFTING || it == InventoryType.CREATIVE) {
+                spawned.pluginSpawn.click(player);
+                return;
+            }
         }
     }
 
