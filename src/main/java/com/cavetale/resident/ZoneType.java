@@ -1,6 +1,7 @@
 package com.cavetale.resident;
 
 import com.cavetale.mytems.Mytems;
+import com.cavetale.mytems.util.Entities;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -127,12 +128,26 @@ public enum ZoneType {
                     }
                 });
         }
-    };
+    },
+    CHILDREN {
+        @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
+            return location.getWorld().spawn(location, Villager.class, e -> {
+                    prepMob(e, consumer);
+                    e.setProfession(Villager.Profession.NONE);
+                    Villager.Type[] types = Villager.Type.values();
+                    e.setVillagerType(types[plugin.random.nextInt(types.length)]);
+                    e.setBaby();
+                    e.setAgeLock(true);
+                });
+        }
+    },
+    ;
 
     abstract Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer);
 
     private static void prepMob(Mob mob, Consumer<Mob> cons) {
         mob.setPersistent(false);
+        Entities.setTransient(mob);
         mob.setRemoveWhenFarAway(true);
         cons.accept(mob);
         Bukkit.getMobGoals().removeAllGoals(mob);
