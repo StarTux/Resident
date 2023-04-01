@@ -52,8 +52,7 @@ public final class EventListener implements Listener {
         if (spawned.pluginSpawn != null) {
             spawned.pluginSpawn.spawned = null;
         }
-        final Entity entity = event.getEntity();
-        Bukkit.getScheduler().runTask(plugin, () -> entity.remove());
+        Bukkit.getScheduler().runTask(plugin, spawned::remove);
     }
 
     @EventHandler(ignoreCancelled = true)

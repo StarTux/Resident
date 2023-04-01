@@ -155,7 +155,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         Zoned zoned = requireZoned(args[0]);
         int count = 0;
         for (Spawned spawned : plugin.findSpawned(zoned.zone)) {
-            spawned.entity.remove();
+            spawned.remove();
             count += 1;
         }
         sender.sendMessage(Component.text("Cleared " + count + " residents from " + zoned.zone.getName(),

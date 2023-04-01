@@ -205,13 +205,13 @@ public final class Zoned {
         } else {
             messageIndex = -1;
         }
-        Mob entity = zone.getType().spawn(plugin, location, e -> {
-                int entityId = e.getEntityId();
-                Spawned spawned = new Spawned(e, zone, messageIndex);
-                plugin.spawnedMap.put(entityId, spawned);
-                spawned.movingTo = Vec3i.of(location);
-            });
+        final Mob entity = zone.getType().spawn(plugin, location, e -> { });
+        final int entityId = entity.getEntityId();
+        final Spawned spawned = new Spawned(entity, zone, messageIndex);
+        plugin.spawnedMap.put(entityId, spawned);
+        spawned.movingTo = Vec3i.of(location);
         entity.setMetadata("nomap", new FixedMetadataValue(plugin, true));
+        if (plugin.aprilFools) spawned.makeAprilFools();
     }
 
     protected void move() {
@@ -231,7 +231,7 @@ public final class Zoned {
     private void move(Spawned spawned, World world) {
         Vec3i mobVector = Vec3i.of(spawned.entity.getLocation());
         if (!spawnBlocks.contains(mobVector) && !spawnBlocks.contains(mobVector.add(0, -1, 0))) {
-            spawned.entity.remove();
+            spawned.remove();
             return;
         }
         List<Vec3i> loadedBlockList = new ArrayList<>(loadedSpawnBlocks);
@@ -240,7 +240,7 @@ public final class Zoned {
                 return distance < MIN_MOVE_DISTANCE || distance > MAX_MOVE_DISTANCE;
             });
         if (loadedBlockList.isEmpty()) {
-            spawned.entity.remove(); // modifies spawnedMap?
+            spawned.remove(); // modifies spawnedMap?
             return;
         }
         // Move!

@@ -7,6 +7,10 @@ import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +39,7 @@ public final class ResidentPlugin extends JavaPlugin {
     protected final Map<UUID, Session> sessions = new HashMap<>();
     private List<ItemStack> halloweenSkulls; // lazy loaded
     protected List<PluginSpawn> pluginSpawns = new ArrayList<>();
+    protected boolean aprilFools;
 
     @Override
     public void onLoad() {
@@ -49,6 +54,14 @@ public final class ResidentPlugin extends JavaPlugin {
         eventListener.enable();
         loadZones();
         Bukkit.getScheduler().runTaskTimer(this, this::tick, 20L, 20L);
+        // April Fools
+        Instant instant = Instant.now();
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, ZoneId.of("UTC-11"));
+        LocalDate localDate = localDateTime.toLocalDate();
+        final int month = localDate.getMonth().getValue();
+        final int day = localDate.getDayOfMonth();
+        aprilFools = month == 4 && day == 1;
+        getLogger().info("month:" + month + " day:" + day + " fool:" + aprilFools);
     }
 
     @Override
@@ -99,7 +112,7 @@ public final class ResidentPlugin extends JavaPlugin {
         zonedMap.clear();
         for (Spawned spawned : new ArrayList<>(spawnedMap.values())) {
             if (spawned.hasZone()) {
-                spawned.entity.remove();
+                spawned.remove();
             }
         }
     }

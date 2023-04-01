@@ -74,7 +74,7 @@ public final class PluginSpawn {
 
     public void despawn() {
         if (spawned == null) return;
-        spawned.entity.remove();
+        spawned.remove();
         spawned = null;
     }
 
