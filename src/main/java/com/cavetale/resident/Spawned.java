@@ -70,6 +70,7 @@ public final class Spawned {
                                                        new AxisAngle4f(0f, 0f, 0f, 0f)));
             });
         task = Bukkit.getScheduler().runTaskTimer(ResidentPlugin.instance, () -> {
+                if (itemDisplay == null) return;
                 itemDisplay.teleport(entity.getLocation());
             }, 1L, 1L);
     }
