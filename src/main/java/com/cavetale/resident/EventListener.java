@@ -98,6 +98,10 @@ public final class EventListener implements Listener {
 
     @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
     private void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        switch (event.getCause()) {
+        case ENTITY_ATTACK: break;
+        default: return;
+        }
         Spawned spawned = handleEventEntity(event.getEntity(), event);
         if (spawned == null) return;
         if (!(event.getDamager() instanceof Player)) return;
