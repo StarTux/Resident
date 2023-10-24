@@ -3,6 +3,7 @@ package com.cavetale.resident;
 import com.cavetale.core.event.entity.PlayerEntityAbilityQuery;
 import com.cavetale.core.struct.Vec2i;
 import com.cavetale.core.struct.Vec3i;
+import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import com.destroystokyo.paper.event.entity.EntityPathfindEvent;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import io.papermc.paper.event.entity.EntityMoveEvent;
@@ -156,6 +157,11 @@ public final class EventListener implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     private void onPlayerEntityAbility(PlayerEntityAbilityQuery query) {
         handleEventEntity(query.getEntity(), query);
+    }
+
+    @EventHandler
+    private void onEntityKnockbackByEntity(EntityKnockbackByEntityEvent event) {
+        handleEventEntity(event.getEntity(), event);
     }
 
     @EventHandler
