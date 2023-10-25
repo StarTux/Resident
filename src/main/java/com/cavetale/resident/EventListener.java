@@ -7,6 +7,7 @@ import com.destroystokyo.paper.event.entity.EntityKnockbackByEntityEvent;
 import com.destroystokyo.paper.event.entity.EntityPathfindEvent;
 import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import io.papermc.paper.event.entity.EntityMoveEvent;
+import io.papermc.paper.event.entity.EntityPushedByEntityAttackEvent;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -159,7 +160,12 @@ public final class EventListener implements Listener {
         handleEventEntity(query.getEntity(), query);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
+    private void onEntityPushedByEntityAttackEvent(EntityPushedByEntityAttackEvent event) {
+        handleEventEntity(event.getEntity(), event);
+    }
+
+    @EventHandler(ignoreCancelled = true)
     private void onEntityKnockbackByEntity(EntityKnockbackByEntityEvent event) {
         handleEventEntity(event.getEntity(), event);
     }
