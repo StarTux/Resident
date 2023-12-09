@@ -29,6 +29,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.server.PluginDisableEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 
@@ -168,6 +169,11 @@ public final class EventListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     private void onEntityKnockbackByEntity(EntityKnockbackByEntityEvent event) {
         handleEventEntity(event.getEntity(), event);
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+    private void onVehicleEnter(VehicleEnterEvent event) {
+        handleEventEntity(event.getEntered(), event);
     }
 
     @EventHandler
