@@ -166,6 +166,8 @@ public final class Zoned {
                 }
                 return;
             }
+            final Chunk chunk = world.getChunkAt(chunkVector.x, chunkVector.z);
+            if (chunk.getLoadLevel() != Chunk.LoadLevel.ENTITY_TICKING) continue;
             Block block = blockVector.toBlock(world);
             if (!canSpawnOnBlock(block)) continue;
             spawn(block.getLocation().add(0.5, 1.0, 0.5));
@@ -249,11 +251,16 @@ public final class Zoned {
             spawned.remove(); // modifies spawnedMap?
             return;
         }
-        // Move!
-        Vec3i targetVector = loadedBlockList.get(plugin.random.nextInt(loadedBlockList.size()));
-        Block block = targetVector.toBlock(world);
+        final Vec3i targetVector = loadedBlockList.get(plugin.random.nextInt(loadedBlockList.size()));
+        // Chunk
+        final Vec2i chunkVector = targetVector.blockToChunk();
+        if (!world.isChunkLoaded(chunkVector.x, chunkVector.z)) return;
+        final Chunk chunk = world.getChunkAt(chunkVector.x, chunkVector.z);
+        if (chunk.getLoadLevel() != Chunk.LoadLevel.ENTITY_TICKING) return;
+        final Block block = targetVector.toBlock(world);
         if (!canSpawnOnBlock(block)) return;
-        Location location = block.getLocation().add(0.5, 1.0, 0.5);
+        // Move!
+        final Location location = block.getLocation().add(0.5, 1.0, 0.5);
         spawned.pathing = true;
         if (null != findPath(spawned.entity, location)) {
             spawned.movingTo = targetVector;
