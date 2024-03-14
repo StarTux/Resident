@@ -129,7 +129,6 @@ public final class ZoneMessage {
             }
         }
         if (entity instanceof Ageable ageable) {
-            ageable.setAgeLock(true);
             if (baby) {
                 ageable.setBaby();
             } else {

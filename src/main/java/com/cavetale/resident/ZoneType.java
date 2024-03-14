@@ -14,6 +14,7 @@ import org.bukkit.attribute.Attributable;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.Breedable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Villager;
@@ -172,6 +173,9 @@ public enum ZoneType {
         }
         if (entity instanceof Villager villager) {
             villager.setRecipes(List.of());
+        }
+        if (entity instanceof Breedable breedable) {
+            breedable.setAgeLock(true);
         }
     }
 }
