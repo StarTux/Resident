@@ -1,42 +1,42 @@
 package com.cavetale.resident.message;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.cavetale.resident.Zoned;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.bukkit.configuration.file.YamlConfiguration;
+import static com.cavetale.resident.ResidentPlugin.plugin;
 
+@Data
+@RequiredArgsConstructor
 public final class ZoneMessageList {
-    protected final List<ZoneMessage> messages = new ArrayList<>();
+    private final Zoned zoned;
+    private final Map<String, ZoneMessage> messages = new HashMap<>();
 
-    public static ZoneMessageList ofConfig(List<Object> configList) {
-        ZoneMessageList result = new ZoneMessageList();
-        result.loadConfig(configList);
-        return result;
-    }
-
-    public void loadConfig(List<Object> configList) {
-        if (configList == null) configList = List.of();
-        for (Object item : configList) {
-            if (item instanceof String) {
-                messages.add(new ZoneMessage(List.of((String) item)));
-            } else if (item instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<String> list = (List<String>) item;
-                if (list.isEmpty()) {
-                    throw new IllegalArgumentException("message is empty!");
-                }
-                messages.add(new ZoneMessage(list));
-            }
+    public void load() {
+        final String name = zoned.getZone().getName();
+        final File file = new File(plugin().getMessagesFolder(), name + ".yml");
+        if (!file.exists()) return;
+        final YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        for (String key : config.getKeys(false)) {
+            if (!config.isConfigurationSection(key)) continue;
+            ZoneMessage message = new ZoneMessage(zoned, key);
+            message.load(config.getConfigurationSection(key));
+            messages.put(key, message);
         }
-    }
-
-    public boolean isEmpty() {
-        return messages.isEmpty();
     }
 
     public int size() {
         return messages.size();
     }
 
-    public ZoneMessage get(int index) {
-        return messages.get(index);
+    public boolean isEmpty() {
+        return messages.isEmpty();
+    }
+
+    public ZoneMessage get(String key) {
+        return messages.get(key);
     }
 }

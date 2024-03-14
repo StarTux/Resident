@@ -14,12 +14,13 @@ import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
     protected ResidentCommand(final ResidentPlugin plugin) {
@@ -85,11 +86,21 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             .description("Add plugin spawn")
             .completers(CommandArgCompleter.enumLowerList(ZoneType.class))
             .playerCaller(this::pluginSpawnAdd);
+        // Message
+        CommandNode messageNode = rootNode.addChild("message");
+        messageNode.addChild("info").arguments("<zone> <key>")
+            .description("Print message info")
+            .completer(this::completeMessage)
+            .playerCaller(this::messageInfo);
+        messageNode.addChild("view").arguments("<zone> <key>")
+            .description("View messages")
+            .completer(this::completeMessage)
+            .playerCaller(this::messageView);
     }
 
     private boolean reload(CommandSender sender, String[] args) {
         plugin.loadZones();
-        sender.sendMessage(Component.text("Save file reloaded.", NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("Save file reloaded.", YELLOW));
         return true;
     }
 
@@ -100,18 +111,18 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         if (zoned == null) {
             throw new CommandWarn("Zone not found: " + name);
         }
-        sender.sendMessage(Component.text("Zone Info " + zoned.zone.getName(), NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("World " + zoned.zone.getWorld(), NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("Regions " + zoned.zone.getRegions().size(), NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("SpawnBlocks " + zoned.spawnBlocks.size(), NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("LoadedSpawnBlocks " + zoned.loadedSpawnBlocks.size(), NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("SpawnChunks " + zoned.chunkBlockMap.size(), NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("UpdateId " + zoned.updateId, NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("Disabled " + zoned.disabled, NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("Messages " + zoned.messageList.size(), NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("Max " + zoned.zone.getMaxResidents(), NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("Total " + zoned.total, NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text("Spawned " + plugin.countSpawned(zoned.zone), NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("Zone Info " + zoned.zone.getName(), YELLOW));
+        sender.sendMessage(Component.text("World " + zoned.zone.getWorld(), YELLOW));
+        sender.sendMessage(Component.text("Regions " + zoned.zone.getRegions().size(), YELLOW));
+        sender.sendMessage(Component.text("SpawnBlocks " + zoned.spawnBlocks.size(), YELLOW));
+        sender.sendMessage(Component.text("LoadedSpawnBlocks " + zoned.loadedSpawnBlocks.size(), YELLOW));
+        sender.sendMessage(Component.text("SpawnChunks " + zoned.chunkBlockMap.size(), YELLOW));
+        sender.sendMessage(Component.text("UpdateId " + zoned.updateId, YELLOW));
+        sender.sendMessage(Component.text("Disabled " + zoned.disabled, YELLOW));
+        sender.sendMessage(Component.text("Messages " + zoned.messageList.size(), YELLOW));
+        sender.sendMessage(Component.text("Max " + zoned.zone.getMaxResidents(), YELLOW));
+        sender.sendMessage(Component.text("Total " + zoned.total, YELLOW));
+        sender.sendMessage(Component.text("Spawned " + plugin.countSpawned(zoned.zone), YELLOW));
         return true;
     }
 
@@ -135,7 +146,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         zoned.zone.setType(type);
         plugin.saveZone(zoned.zone);
         sender.sendMessage(Component.text("Set type of " + zoned.zone.getName() + " to " + type.name().toLowerCase(),
-                                          NamedTextColor.YELLOW));
+                                          YELLOW));
         return true;
     }
 
@@ -146,7 +157,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         zoned.zone.setMaxResidents(amount);
         plugin.saveZone(zoned.zone);
         sender.sendMessage(Component.text("Set max residents of " + zoned.zone.getName() + " to " + amount,
-                                          NamedTextColor.YELLOW));
+                                          YELLOW));
         return true;
     }
 
@@ -159,7 +170,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             count += 1;
         }
         sender.sendMessage(Component.text("Cleared " + count + " residents from " + zoned.zone.getName(),
-                                          NamedTextColor.YELLOW));
+                                          YELLOW));
         return true;
     }
 
@@ -178,7 +189,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         zoned.updateSpawnBlocks();
         plugin.saveZone(zoned.zone);
         player.sendMessage(Component.text("Region added to zone " + zoned.zone.getName()
-                                          + ": " + region, NamedTextColor.YELLOW));
+                                          + ": " + region, YELLOW));
         return true;
     }
 
@@ -206,7 +217,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         zoned.updateSpawnBlocks();
         plugin.saveZone(zoned.zone);
         player.sendMessage(Component.text(removeList.size() + " regions removed from zone " + zoned.zone.getName()
-                                          + ": " + removeList, NamedTextColor.YELLOW));
+                                          + ": " + removeList, YELLOW));
         return true;
     }
 
@@ -223,14 +234,14 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         for (Cuboid region : zoned.zone.getRegions()) {
             region.highlight(zoned.getWorld(), 0.0, loc -> player.spawnParticle(Particle.END_ROD, loc, 1, 0.0, 0.0, 0.0, 0.0));
         }
-        player.sendMessage(Component.text("Highlighting " + zoned.zone.getName(), NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("Highlighting " + zoned.zone.getName(), YELLOW));
         return true;
     }
 
     private boolean pluginSpawnList(CommandSender sender, String[] args) {
         if (args.length != 0) return false;
         sender.sendMessage(Component.text("Total " + plugin.pluginSpawns.size() + " plugin spawns",
-                                          NamedTextColor.YELLOW));
+                                          YELLOW));
         for (PluginSpawn pluginSpawn : plugin.pluginSpawns) {
             sender.sendMessage(Component.text("- " + pluginSpawn.plugin.getName()
                                               + " " + pluginSpawn.type.name().toLowerCase()
@@ -249,7 +260,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             throw new CommandWarn("Plugin not found: " + args[0]);
         }
         plugin.clearPluginSpawns(thePlugin);
-        sender.sendMessage(Component.text("Spawns of " + thePlugin.getName() + " cleared!", NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text("Spawns of " + thePlugin.getName() + " cleared!", YELLOW));
         return true;
     }
 
@@ -259,7 +270,7 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
                                                        requireZoneType(args[0]),
                                                        Loc.of(player.getLocation()));
         pluginSpawn.setOnPlayerClick(p -> p.sendMessage("Hello World"));
-        player.sendMessage(Component.text("Plugin spawn added at your current location", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("Plugin spawn added at your current location", YELLOW));
         return true;
     }
 
@@ -296,5 +307,56 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
         return plugin.zonedMap.keySet().stream()
             .filter(it -> it.contains(arg))
             .collect(Collectors.toList());
+    }
+
+    private boolean messageInfo(Player player, String[] args) {
+        if (args.length != 2) return false;
+        final String zonedArg = args[0];
+        final String messageArg = args[1];
+        final var zoned = plugin.getZonedMap().get(args[0]);
+        if (zoned == null) {
+            throw new CommandWarn("Zone not found: " + zonedArg);
+        }
+        final var message = zoned.getMessageList().getMessages().get(messageArg);
+        if (message == null) {
+            throw new CommandWarn("Message not found: " + messageArg);
+        }
+        player.sendMessage(text(message.toString(), YELLOW));
+        return true;
+    }
+
+    private boolean messageView(Player player, String[] args) {
+        if (args.length != 2) return false;
+        final String zonedArg = args[0];
+        final String messageArg = args[1];
+        final var zoned = plugin.getZonedMap().get(args[0]);
+        if (zoned == null) {
+            throw new CommandWarn("Zone not found: " + zonedArg);
+        }
+        final var message = zoned.getMessageList().getMessages().get(messageArg);
+        if (message == null) {
+            throw new CommandWarn("Message not found: " + messageArg);
+        }
+        message.send(player);
+        return true;
+    }
+
+    public List<String> completeMessage(CommandContext context, CommandNode node, String[] args) {
+        if (args.length == 1) {
+            return completeZoneNames(context, node, args[0]);
+        } else if (args.length == 2) {
+            final String zonedArg = args[0];
+            final String messageArg = args[1];
+            final var zoned = plugin.getZonedMap().get(zonedArg);
+            if (zoned == null) return List.of();
+            final var list = new ArrayList<String>();
+            final String lower = messageArg.toLowerCase();
+            for (String key : zoned.getMessageList().getMessages().keySet()) {
+                if (key.contains(lower)) list.add(key);
+            }
+            return list;
+        } else {
+            return List.of();
+        }
     }
 }

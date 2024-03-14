@@ -21,7 +21,7 @@ import org.joml.Vector3f;
 public final class Spawned {
     protected final Mob entity;
     protected final Zone zone;
-    protected final int messageIndex;
+    protected final String messageKey;
     protected long lastMoved;
     protected Vec3i lastMovedVec;
     protected long moveCooldown;

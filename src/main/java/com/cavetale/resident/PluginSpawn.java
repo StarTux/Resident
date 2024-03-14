@@ -63,7 +63,7 @@ public final class PluginSpawn {
         Location location = loc.toLocation(w);
         type.spawn(ResidentPlugin.instance, location, e -> {
                 int entityId = e.getEntityId();
-                spawned = new Spawned(e, Zone.NULL, -1);
+                spawned = new Spawned(e, Zone.NULL, null);
                 spawned.pluginSpawn = this;
                 ResidentPlugin.instance.spawnedMap.put(entityId, spawned);
                 if (onMobSpawning != null) {

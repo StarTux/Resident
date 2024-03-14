@@ -10,9 +10,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.attribute.Attributable;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
@@ -20,13 +22,14 @@ import org.bukkit.inventory.ItemStack;
 public enum ZoneType {
     NONE {
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
-            return location.getWorld().spawn(location, Villager.class, e -> {
-                    prepMob(e, consumer);
+            return location.getWorld().spawn(location, Villager.class, false, e -> {
+                    prepEntity(e);
                     Villager.Profession[] professions = Villager.Profession.values();
                     e.setProfession(professions[plugin.random.nextInt(professions.length)]);
                     Villager.Type[] types = Villager.Type.values();
                     e.setVillagerType(types[plugin.random.nextInt(types.length)]);
                     e.setVillagerLevel(1 + plugin.random.nextInt(5));
+                    consumer.accept(e);
                 });
         }
     },
@@ -35,11 +38,12 @@ public enum ZoneType {
             .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
-            return location.getWorld().spawn(location, Villager.class, e -> {
-                    prepMob(e, consumer);
+            return location.getWorld().spawn(location, Villager.class, false, e -> {
+                    prepEntity(e);
                     e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
                     e.setVillagerType(Villager.Type.PLAINS);
                     e.setVillagerLevel(1 + plugin.random.nextInt(3));
+                    consumer.accept(e);
                 });
         }
     },
@@ -48,11 +52,12 @@ public enum ZoneType {
             .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
-            return location.getWorld().spawn(location, Villager.class, e -> {
-                    prepMob(e, consumer);
+            return location.getWorld().spawn(location, Villager.class, false, e -> {
+                    prepEntity(e);
                     e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
                     e.setVillagerType(Villager.Type.DESERT);
                     e.setVillagerLevel(1 + plugin.random.nextInt(5));
+                    consumer.accept(e);
                 });
         }
     },
@@ -61,11 +66,12 @@ public enum ZoneType {
             .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
-            return location.getWorld().spawn(location, Villager.class, e -> {
-                    prepMob(e, consumer);
+            return location.getWorld().spawn(location, Villager.class, false, e -> {
+                    prepEntity(e);
                     e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
                     e.setVillagerType(Villager.Type.SWAMP);
                     e.setVillagerLevel(1 + plugin.random.nextInt(5));
+                    consumer.accept(e);
                 });
         }
     },
@@ -78,11 +84,12 @@ public enum ZoneType {
                                                                       Villager.Profession.WEAPONSMITH);
         private final List<Villager.Type> types = List.of(Villager.Type.values());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
-            return location.getWorld().spawn(location, Villager.class, e -> {
-                    prepMob(e, consumer);
+            return location.getWorld().spawn(location, Villager.class, false, e -> {
+                    prepEntity(e);
                     e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
                     e.setVillagerType(types.get(plugin.random.nextInt(types.size())));
                     e.setVillagerLevel(1 + plugin.random.nextInt(5));
+                    consumer.accept(e);
                 });
         }
     },
@@ -95,8 +102,8 @@ public enum ZoneType {
                 set.remove(Villager.Profession.FARMER);
                 this.professions = List.copyOf(set);
             }
-            return location.getWorld().spawn(location, Villager.class, e -> {
-                    prepMob(e, consumer);
+            return location.getWorld().spawn(location, Villager.class, false, e -> {
+                    prepEntity(e);
                     e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
                     e.setVillagerType(Villager.Type.SNOW);
                     e.setVillagerLevel(1 + plugin.random.nextInt(5));
@@ -108,6 +115,7 @@ public enum ZoneType {
                     default: throw new IllegalStateException("roll=" + roll);
                     }
                     e.getEquipment().setHelmet(hat);
+                    consumer.accept(e);
                 });
         }
     },
@@ -116,8 +124,8 @@ public enum ZoneType {
                                                                       Villager.Profession.NITWIT,
                                                                       Villager.Profession.CLERIC);
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
-            return location.getWorld().spawn(location, Villager.class, e -> {
-                    prepMob(e, consumer);
+            return location.getWorld().spawn(location, Villager.class, false, e -> {
+                    prepEntity(e);
                     e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
                     e.setVillagerType(Villager.Type.PLAINS);
                     e.setVillagerLevel(1);
@@ -126,18 +134,20 @@ public enum ZoneType {
                         ItemStack skull = skulls.get(plugin.random.nextInt(skulls.size()));
                         e.getEquipment().setHelmet(skull);
                     }
+                    consumer.accept(e);
                 });
         }
     },
     CHILDREN {
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
-            return location.getWorld().spawn(location, Villager.class, e -> {
-                    prepMob(e, consumer);
+            return location.getWorld().spawn(location, Villager.class, false, e -> {
+                    prepEntity(e);
                     e.setProfession(Villager.Profession.NONE);
                     Villager.Type[] types = Villager.Type.values();
                     e.setVillagerType(types[plugin.random.nextInt(types.length)]);
                     e.setBaby();
                     e.setAgeLock(true);
+                    consumer.accept(e);
                 });
         }
     },
@@ -145,21 +155,23 @@ public enum ZoneType {
 
     abstract Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer);
 
-    private static void prepMob(Mob mob, Consumer<Mob> cons) {
-        mob.setPersistent(false);
-        Entities.setTransient(mob);
-        mob.setRemoveWhenFarAway(true);
-        cons.accept(mob);
-        Bukkit.getMobGoals().removeAllGoals(mob);
-        AttributeInstance movementSpeed = mob.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
-        movementSpeed.setBaseValue(0.5);
-        for (AttributeModifier it : new ArrayList<>(movementSpeed.getModifiers())) {
-            movementSpeed.removeModifier(it);
+    public static void prepEntity(Entity entity) {
+        entity.setPersistent(false);
+        Entities.setTransient(entity);
+        entity.setSilent(true);
+        if (entity instanceof Attributable living) {
+            AttributeInstance movementSpeed = living.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+            movementSpeed.setBaseValue(0.5);
+            for (AttributeModifier it : new ArrayList<>(movementSpeed.getModifiers())) {
+                movementSpeed.removeModifier(it);
+            }
         }
-        if (mob instanceof Villager) {
-            Villager villager = (Villager) mob;
+        if (entity instanceof Mob mob) {
+            mob.setRemoveWhenFarAway(true);
+            Bukkit.getMobGoals().removeAllGoals(mob);
+        }
+        if (entity instanceof Villager villager) {
             villager.setRecipes(List.of());
         }
-        mob.setSilent(true);
     }
 }

@@ -1,11 +1,8 @@
 package com.cavetale.resident;
 
-import com.cavetale.core.font.Emoji;
-import com.cavetale.core.font.GlyphPolicy;
 import com.cavetale.core.struct.Cuboid;
 import com.cavetale.core.struct.Vec2i;
 import com.cavetale.core.struct.Vec3i;
-import com.cavetale.mytems.Mytems;
 import com.cavetale.resident.message.ZoneMessage;
 import com.cavetale.resident.message.ZoneMessageList;
 import com.cavetale.resident.save.Zone;
@@ -17,32 +14,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.metadata.FixedMetadataValue;
-import static net.kyori.adventure.text.Component.join;
-import static net.kyori.adventure.text.Component.newline;
-import static net.kyori.adventure.text.Component.space;
-import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.JoinConfiguration.noSeparators;
-import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 /**
  * This class represents the runtime object of a Zone.
  */
+@Getter
 @RequiredArgsConstructor
 public final class Zoned {
     protected static final int SPAWN_DISTANCE = 8;
@@ -51,7 +40,7 @@ public final class Zoned {
     protected static final int MAX_MOVE_DISTANCE = 32;
     protected final ResidentPlugin plugin;
     protected final Zone zone;
-    protected final ZoneMessageList messageList;
+    protected ZoneMessageList messageList;
     protected final Set<Vec3i> spawnBlocks = new HashSet<>();
     protected final Set<Vec3i> loadedSpawnBlocks = new HashSet<>();
     protected final Map<Vec2i, Set<Vec3i>> chunkBlockMap = new HashMap<>();
@@ -61,6 +50,11 @@ public final class Zoned {
 
     public World getWorld() {
         return Bukkit.getWorld(zone.getWorld());
+    }
+
+    protected void enable() {
+        messageList = new ZoneMessageList(this);
+        messageList.load();
     }
 
     protected void disable() {
@@ -182,35 +176,47 @@ public final class Zoned {
 
     protected void spawn(Location location) {
         if (zone.getType() == null) return;
-        final int messageIndex;
+        final String messageKey;
         if (!messageList.isEmpty()) {
-            int[] usedIndexes = new int[messageList.size()];
+            // Find an unused message key
+            final List<String> keys = new ArrayList<>(messageList.size());
+            keys.addAll(messageList.getMessages().keySet());
             for (Spawned existing : plugin.findSpawned(zone)) {
-                if (existing.messageIndex >= 0 && existing.messageIndex < usedIndexes.length) {
-                    usedIndexes[existing.messageIndex] += 1;
-                }
+                if (existing.messageKey == null) continue;
+                keys.remove(existing.messageKey);
             }
-            int minValue = usedIndexes[0];
-            List<Integer> indexOptions = new ArrayList<>(usedIndexes.length);
-            for (int i = 0; i < usedIndexes.length; i += 1) {
-                if (usedIndexes[i] < minValue) {
-                    minValue = usedIndexes[i];
-                    indexOptions.clear();
-                    indexOptions.add(i);
-                } else if (usedIndexes[i] == minValue) {
-                    indexOptions.add(i);
-                }
-            }
-            messageIndex = indexOptions.get(plugin.random.nextInt(indexOptions.size()));
+            messageKey = !keys.isEmpty()
+                ? keys.get(plugin.random.nextInt(keys.size()))
+                : null;
         } else {
-            messageIndex = -1;
+            messageKey = null;
         }
-        final Mob entity = zone.getType().spawn(plugin, location, e -> { });
-        final int entityId = entity.getEntityId();
-        final Spawned spawned = new Spawned(entity, zone, messageIndex);
+        final ZoneMessage message = messageKey != null
+            ? messageList.get(messageKey)
+            : null;
+        final Mob mob;
+        if (message != null && message.getEntityType() != null) {
+            var tmp = location.getWorld().spawn(location, message.getEntityType().getEntityClass(), false, e -> {
+                    ZoneType.prepEntity(e);
+                    message.applyEntity(e);
+                });
+            if (!(tmp instanceof Mob m)) {
+                plugin.getLogger().severe("EntityType not a Mob: " + message.getEntityType());
+                tmp.remove();
+                return;
+            }
+            mob = m;
+        } else {
+            mob = zone.getType().spawn(plugin, location, e -> { });
+        }
+        if (message != null && message.getDisplayName() != null) {
+            mob.customName(message.getDisplayName());
+        }
+        final int entityId = mob.getEntityId();
+        final Spawned spawned = new Spawned(mob, zone, messageKey);
         plugin.spawnedMap.put(entityId, spawned);
         spawned.movingTo = Vec3i.of(location);
-        entity.setMetadata("nomap", new FixedMetadataValue(plugin, true));
+        mob.setMetadata("nomap", new FixedMetadataValue(plugin, true));
         if (plugin.aprilFools) spawned.makeAprilFools();
     }
 
@@ -286,25 +292,9 @@ public final class Zoned {
         player.playSound(spawned.entity.getEyeLocation(), Sound.ENTITY_VILLAGER_TRADE, SoundCategory.NEUTRAL,
                          1.0f, 1.0f);
         // Message
-        if (spawned.messageIndex < 0 || spawned.messageIndex >= messageList.size()) return;
-        ZoneMessage message = messageList.get(spawned.messageIndex);
-        ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
-        book.editMeta(m -> {
-                BookMeta meta = (BookMeta) m;
-                List<Component> pages = new ArrayList<>();
-                for (int i = 0; i < message.size(); i += 1) {
-                    pages.add(join(noSeparators(),
-                                   Mytems.VILLAGER_FACE,
-                                   space(),
-                                   text("Villager", DARK_GREEN),
-                                   newline(), newline(),
-                                   Emoji.replaceText(text(message.getLine(i)), GlyphPolicy.HIDDEN)));
-                }
-                meta.author(text("Cavetale"));
-                meta.title(text("Resident"));
-                meta.pages(pages);
-            });
-        player.openBook(book);
+        if (spawned.messageKey == null) return;
+        ZoneMessage message = messageList.get(spawned.messageKey);
+        message.send(player);
     }
 
     protected void onChunkLoad(String chunkWorld, Vec2i chunkVector, boolean loaded) {

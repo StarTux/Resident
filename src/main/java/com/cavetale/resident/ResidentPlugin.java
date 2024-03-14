@@ -1,7 +1,6 @@
 package com.cavetale.resident;
 
 import com.cavetale.core.util.Json;
-import com.cavetale.resident.message.ZoneMessageList;
 import com.cavetale.resident.save.Zone;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
@@ -18,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -27,6 +27,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
+@Getter
 public final class ResidentPlugin extends JavaPlugin {
     protected static ResidentPlugin instance;
     protected ResidentCommand residentCommand = new ResidentCommand(this);
@@ -34,8 +35,8 @@ public final class ResidentPlugin extends JavaPlugin {
     protected final Map<Integer, Spawned> spawnedMap = new HashMap<>();
     protected final Map<String, Zoned> zonedMap = new HashMap<>();
     protected File zonesFolder;
+    protected File messagesFolder;
     protected Random random = new Random();
-    protected YamlConfiguration messagesConfig;
     protected final Map<UUID, Session> sessions = new HashMap<>();
     private List<ItemStack> halloweenSkulls; // lazy loaded
     protected List<PluginSpawn> pluginSpawns = new ArrayList<>();
@@ -50,6 +51,8 @@ public final class ResidentPlugin extends JavaPlugin {
     public void onEnable() {
         zonesFolder = new File(getDataFolder(), "zones");
         zonesFolder.mkdirs();
+        messagesFolder = new File(getDataFolder(), "messages");
+        messagesFolder.mkdirs();
         residentCommand.enable();
         eventListener.enable();
         loadZones();
@@ -92,7 +95,6 @@ public final class ResidentPlugin extends JavaPlugin {
         if (!messageFile.exists()) {
             saveResource(messagePath, false);
         }
-        messagesConfig = YamlConfiguration.loadConfiguration(messageFile);
         for (Zone zone : zones) {
             enableZone(zone);
         }
@@ -118,9 +120,8 @@ public final class ResidentPlugin extends JavaPlugin {
     }
 
     protected void enableZone(Zone zone) {
-        @SuppressWarnings("unchecked")
-        List<Object> objectList = (List<Object>) messagesConfig.getList(zone.getName());
-        Zoned zoned = new Zoned(this, zone, ZoneMessageList.ofConfig(objectList));
+        Zoned zoned = new Zoned(this, zone);
+        zoned.enable();
         zonedMap.put(zone.getName(), zoned);
         zoned.updateSpawnBlocks();
     }
@@ -210,5 +211,9 @@ public final class ResidentPlugin extends JavaPlugin {
             pluginSpawn.despawn();
             pluginSpawns.remove(pluginSpawn);
         }
+    }
+
+    public static ResidentPlugin plugin() {
+        return instance;
     }
 }
