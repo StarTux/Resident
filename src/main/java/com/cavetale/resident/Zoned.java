@@ -155,7 +155,7 @@ public final class Zoned {
             });
         if (loadedBlockList.isEmpty()) return;
         // Spawn!
-        for (int i = 0; i < difference; i += 1) {
+        for (int i = 0; i < difference && !loadedBlockList.isEmpty(); i += 1) {
             Vec3i blockVector = loadedBlockList.remove(plugin.random.nextInt(loadedBlockList.size()));
             Vec2i chunkVector = blockVector.blockToChunk();
             if (!world.isChunkLoaded(chunkVector.x, chunkVector.z)) {
@@ -172,7 +172,6 @@ public final class Zoned {
             if (!canSpawnOnBlock(block)) continue;
             spawn(block.getLocation().add(0.5, 1.0, 0.5));
             loadedBlockList.removeIf(it -> blockVector.maxDistance(it) < SPAWN_DISTANCE);
-            if (loadedBlockList.isEmpty()) break;
         }
     }
 
