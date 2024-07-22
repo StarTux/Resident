@@ -2,12 +2,11 @@ package com.cavetale.resident;
 
 import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.util.Entities;
+import io.papermc.paper.registry.RegistryKey;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attributable;
@@ -19,23 +18,24 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
+import static io.papermc.paper.registry.RegistryAccess.registryAccess;
 
 public enum ZoneType {
     NONE {
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
             return location.getWorld().spawn(location, Villager.class, false, e -> {
                     prepEntity(e);
-                    Villager.Profession[] professions = Villager.Profession.values();
-                    e.setProfession(professions[plugin.random.nextInt(professions.length)]);
-                    Villager.Type[] types = Villager.Type.values();
-                    e.setVillagerType(types[plugin.random.nextInt(types.length)]);
+                    final List<Villager.Profession> professions = allVillagerProfessions();
+                    e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
+                    final List<Villager.Type> types = allVillagerTypes();
+                    e.setVillagerType(types.get(plugin.random.nextInt(types.size())));
                     e.setVillagerLevel(1 + plugin.random.nextInt(5));
                     consumer.accept(e);
                 });
         }
     },
     SPAWN {
-        private final List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
+        private final List<Villager.Profession> professions = registryAccess().getRegistry(RegistryKey.VILLAGER_PROFESSION).stream()
             .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
@@ -49,7 +49,7 @@ public enum ZoneType {
         }
     },
     BAZAAR {
-        private final List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
+        private final List<Villager.Profession> professions = registryAccess().getRegistry(RegistryKey.VILLAGER_PROFESSION).stream()
             .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
@@ -63,7 +63,7 @@ public enum ZoneType {
         }
     },
     WITCH {
-        private final List<Villager.Profession> professions = Stream.of(Villager.Profession.values())
+        private final List<Villager.Profession> professions = registryAccess().getRegistry(RegistryKey.VILLAGER_PROFESSION).stream()
             .filter(p -> p != Villager.Profession.NITWIT && p != Villager.Profession.NONE)
             .collect(Collectors.toList());
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
@@ -83,7 +83,7 @@ public enum ZoneType {
                                                                       Villager.Profession.MASON,
                                                                       Villager.Profession.TOOLSMITH,
                                                                       Villager.Profession.WEAPONSMITH);
-        private final List<Villager.Type> types = List.of(Villager.Type.values());
+        private final List<Villager.Type> types = allVillagerTypes();
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
             return location.getWorld().spawn(location, Villager.class, false, e -> {
                     prepEntity(e);
@@ -95,14 +95,11 @@ public enum ZoneType {
         }
     },
     CHRISTMAS {
-        private List<Villager.Profession> professions;
+        private final List<Villager.Profession> professions = registryAccess().getRegistry(RegistryKey.VILLAGER_PROFESSION).stream()
+            .filter(p -> p != Villager.Profession.FARMER)
+            .collect(Collectors.toList());
 
         @Override protected Mob spawn(ResidentPlugin plugin, Location location, Consumer<Mob> consumer) {
-            if (this.professions == null) {
-                EnumSet<Villager.Profession> set = EnumSet.allOf(Villager.Profession.class);
-                set.remove(Villager.Profession.FARMER);
-                this.professions = List.copyOf(set);
-            }
             return location.getWorld().spawn(location, Villager.class, false, e -> {
                     prepEntity(e);
                     e.setProfession(professions.get(plugin.random.nextInt(professions.size())));
@@ -144,8 +141,8 @@ public enum ZoneType {
             return location.getWorld().spawn(location, Villager.class, false, e -> {
                     prepEntity(e);
                     e.setProfession(Villager.Profession.NONE);
-                    Villager.Type[] types = Villager.Type.values();
-                    e.setVillagerType(types[plugin.random.nextInt(types.length)]);
+                    List<Villager.Type> types = allVillagerTypes();
+                    e.setVillagerType(types.get(plugin.random.nextInt(types.size())));
                     e.setBaby();
                     e.setAgeLock(true);
                     consumer.accept(e);
@@ -177,5 +174,13 @@ public enum ZoneType {
         if (entity instanceof Breedable breedable) {
             breedable.setAgeLock(true);
         }
+    }
+
+    private static List<Villager.Profession> allVillagerProfessions() {
+        return registryAccess().getRegistry(RegistryKey.VILLAGER_PROFESSION).stream().toList();
+    }
+
+    private static List<Villager.Type> allVillagerTypes() {
+        return registryAccess().getRegistry(RegistryKey.VILLAGER_TYPE).stream().toList();
     }
 }

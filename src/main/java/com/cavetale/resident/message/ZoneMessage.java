@@ -4,6 +4,7 @@ import com.cavetale.core.font.Emoji;
 import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.item.mobface.MobFace;
 import com.cavetale.resident.Zoned;
+import io.papermc.paper.registry.RegistryKey;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
@@ -11,7 +12,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
+import org.bukkit.Keyed;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Entity;
@@ -22,6 +25,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import static com.cavetale.resident.ResidentPlugin.plugin;
 import static com.cavetale.resident.message.EmojiResolver.emojiResolver;
+import static io.papermc.paper.registry.RegistryAccess.registryAccess;
 import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.newline;
 import static net.kyori.adventure.text.Component.space;
@@ -63,8 +67,8 @@ public final class ZoneMessage {
         entityType = parseEnum(config, "EntityType", EntityType.class);
         if (config.isConfigurationSection("Villager")) {
             entityType = EntityType.VILLAGER;
-            villagerProfession = parseEnum(config, "Villager.Profession", Villager.Profession.class);
-            villagerType = parseEnum(config, "Villager.Type", Villager.Type.class);
+            villagerProfession = parseKeyed(config, "Villager.Profession", RegistryKey.VILLAGER_PROFESSION);
+            villagerType = parseKeyed(config, "Villager.Type", RegistryKey.VILLAGER_TYPE);
             villagerLevel = config.getInt("Villager.Level", 1);
         }
         baby = config.getBoolean("Baby", false);
@@ -79,6 +83,17 @@ public final class ZoneMessage {
             plugin().getLogger().warning(zoned.getZone().getName() + ": " + key + ": Invalid " + configKey + ": " + raw);
             return null;
         }
+    }
+
+    private <T extends Keyed> T parseKeyed(ConfigurationSection config, String configKey, RegistryKey<T> registryKey) {
+        final String raw = config.getString(configKey);
+        if (raw == null) return null;
+        final NamespacedKey theKey = NamespacedKey.fromString(raw);
+        final T result = registryAccess().getRegistry(registryKey).get(theKey);
+        if (result == null) {
+            plugin().getLogger().warning(zoned.getZone().getName() + ": " + key + ": Invalid " + configKey + ": " + raw);
+        }
+        return null;
     }
 
     public void send(Player player) {
