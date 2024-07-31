@@ -22,12 +22,11 @@ public final class EmojiResolver implements TagResolver {
     }
 
     @Override
-    public Tag resolve(String name,
-                       ArgumentQueue arguments,
-                       Context ctx) {
+    public Tag resolve(String name, ArgumentQueue arguments, Context ctx) {
+        if (!has(name)) return null;
         final var arg = arguments.pop();
         if (arg == null) return null;
         final var emoji = getEmoji(arg.value());
-        return Tag.inserting(emoji.getComponent());
+        return Tag.selfClosingInserting(emoji.getComponent());
     }
 }

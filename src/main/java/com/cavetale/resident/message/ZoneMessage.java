@@ -24,6 +24,7 @@ import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import static com.cavetale.resident.ResidentPlugin.plugin;
+import static com.cavetale.resident.message.BookmarkResolver.bookmarkResolver;
 import static com.cavetale.resident.message.EmojiResolver.emojiResolver;
 import static io.papermc.paper.registry.RegistryAccess.registryAccess;
 import static net.kyori.adventure.text.Component.join;
@@ -55,10 +56,10 @@ public final class ZoneMessage {
     public void load(ConfigurationSection config) {
         final var rawDisplayName = config.getString("DisplayName");
         displayName = rawDisplayName != null
-            ? miniMessage().deserialize(rawDisplayName, emojiResolver())
+            ? miniMessage().deserialize(rawDisplayName, emojiResolver(), bookmarkResolver())
             : null;
         for (String rawPage : config.getStringList("Pages")) {
-            pages.add(miniMessage().deserialize(rawPage, emojiResolver()));
+            pages.add(miniMessage().deserialize(rawPage, emojiResolver(), bookmarkResolver()));
         }
         final var rawIcon = config.getString("Icon");
         if (rawIcon != null) {
