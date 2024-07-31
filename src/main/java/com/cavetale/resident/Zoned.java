@@ -226,7 +226,7 @@ public final class Zoned {
         if (world == null) return;
         List<Spawned> spawnedList = plugin.findSpawned(zone);
         if (spawnedList.isEmpty()) return;
-        long now = System.currentTimeMillis();
+        final long now = System.currentTimeMillis();
         for (Spawned spawned : spawnedList) {
             if (spawned.lastMoved > now - 2000L) continue;
             if (spawned.moveCooldown > now) continue;
@@ -236,9 +236,11 @@ public final class Zoned {
     }
 
     private void move(Spawned spawned, World world) {
-        Vec3i mobVector = Vec3i.of(spawned.entity.getLocation());
-        if (!spawnBlocks.contains(mobVector) && !spawnBlocks.contains(mobVector.add(0, -1, 0))) {
+        final long now = System.currentTimeMillis();
+        final Vec3i mobVector = Vec3i.of(spawned.entity.getLocation());
+        if (spawned.lastMoved < now - 30_000L && !spawnBlocks.contains(mobVector) && !spawnBlocks.contains(mobVector.add(0, -1, 0))) {
             spawned.remove();
+            plugin.getLogger().info("[" + zone.getName() + "] Removed '" + spawned.getMessageKey() + "' at " + mobVector + " because it was not on a spawn block for too long");
             return;
         }
         List<Vec3i> loadedBlockList = new ArrayList<>(loadedSpawnBlocks);
@@ -248,6 +250,7 @@ public final class Zoned {
             });
         if (loadedBlockList.isEmpty()) {
             spawned.remove(); // modifies spawnedMap?
+            plugin.getLogger().info("[" + zone.getName() + "] Removed '" + spawned.getMessageKey() + "' at " + mobVector + " because loaded block list is empty");
             return;
         }
         final Vec3i targetVector = loadedBlockList.get(plugin.random.nextInt(loadedBlockList.size()));
@@ -271,12 +274,6 @@ public final class Zoned {
         Pathfinder pathfinder = entity.getPathfinder();
         Pathfinder.PathResult pathResult = pathfinder.findPath(target);
         if (pathResult == null) return null;
-        for (Location location : pathResult.getPoints()) {
-            Block b1 = location.getBlock();
-            if (b1.isLiquid()) return null;
-            Block b2 = b1.getRelative(0, -1, 0);
-            if (b2.isLiquid()) return null;
-        }
         pathfinder.moveTo(pathResult, 0.5);
         return pathResult;
     }

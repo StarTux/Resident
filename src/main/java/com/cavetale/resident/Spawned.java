@@ -4,7 +4,7 @@ import com.cavetale.core.struct.Vec3i;
 import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.util.Entities;
 import com.cavetale.resident.save.Zone;
-import lombok.RequiredArgsConstructor;
+import lombok.Data;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
@@ -17,7 +17,7 @@ import org.joml.Vector3f;
 /**
  * Data holder for a spawned mob.
  */
-@RequiredArgsConstructor
+@Data
 public final class Spawned {
     protected final Mob entity;
     protected final Zone zone;
