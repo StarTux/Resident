@@ -6,6 +6,7 @@ import com.cavetale.mytems.util.Entities;
 import com.cavetale.resident.save.Zone;
 import lombok.Data;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Mob;
@@ -73,5 +74,12 @@ public final class Spawned {
                 if (itemDisplay == null) return;
                 itemDisplay.teleport(entity.getLocation());
             }, 1L, 1L);
+    }
+
+    public Sound getTalkSound() {
+        return switch (entity.getType()) {
+        case VILLAGER -> Sound.ENTITY_VILLAGER_TRADE;
+        default -> entity.getAmbientSound();
+        };
     }
 }

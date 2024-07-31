@@ -20,8 +20,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Mob;
@@ -292,8 +290,7 @@ public final class Zoned {
         spawned.entity.getPathfinder().stopPathfinding();
         spawned.moveCooldown = now + 5000L;
         spawned.entity.lookAt(player);
-        player.playSound(spawned.entity.getEyeLocation(), Sound.ENTITY_VILLAGER_TRADE, SoundCategory.NEUTRAL,
-                         1.0f, 1.0f);
+        player.playSound(spawned.entity.getEyeLocation(), spawned.getTalkSound(), 1f, 1f);
         // Message
         if (spawned.messageKey == null) return;
         ZoneMessage message = messageList.get(spawned.messageKey);
