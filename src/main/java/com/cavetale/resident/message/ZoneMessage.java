@@ -15,6 +15,8 @@ import net.kyori.adventure.text.ComponentLike;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attributable;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Entity;
@@ -52,6 +54,7 @@ public final class ZoneMessage {
     private Villager.Type villagerType;
     private int villagerLevel;
     private boolean baby;
+    private double scale;
 
     public void load(ConfigurationSection config) {
         final var rawDisplayName = config.getString("DisplayName");
@@ -73,6 +76,7 @@ public final class ZoneMessage {
             villagerLevel = config.getInt("Villager.Level", 1);
         }
         baby = config.getBoolean("Baby", false);
+        scale = config.getDouble("Scale", 0.0);
     }
 
     private <T extends Enum<T>> T parseEnum(ConfigurationSection config, String configKey, Class<T> enumClass) {
@@ -150,6 +154,9 @@ public final class ZoneMessage {
             } else {
                 ageable.setAdult();
             }
+        }
+        if (scale > 0.0 && entity instanceof Attributable attributable) {
+            attributable.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(scale);
         }
     }
 }
