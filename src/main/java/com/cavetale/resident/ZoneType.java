@@ -165,6 +165,7 @@ public enum ZoneType {
             }
         }
         if (entity instanceof Mob mob) {
+            mob.setCollidable(false);
             mob.setRemoveWhenFarAway(true);
             Bukkit.getMobGoals().removeAllGoals(mob);
         }
