@@ -157,6 +157,17 @@ public final class ZoneMessage {
         }
         if (scale > 0.0 && entity instanceof Attributable attributable) {
             attributable.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(scale);
+            mul(attributable, Attribute.GENERIC_MOVEMENT_SPEED, scale);
+            mul(attributable, Attribute.GENERIC_FLYING_SPEED, scale);
+            mul(attributable, Attribute.GENERIC_GRAVITY, scale);
+            mul(attributable, Attribute.GENERIC_JUMP_STRENGTH, scale);
+            mul(attributable, Attribute.GENERIC_STEP_HEIGHT, scale);
         }
+    }
+
+    private static void mul(Attributable attributable, Attribute attribute, double value) {
+        final var instance = attributable.getAttribute(attribute);
+        if (instance == null) return;
+        instance.setBaseValue(instance.getBaseValue() * value);
     }
 }
