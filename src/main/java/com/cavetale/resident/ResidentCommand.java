@@ -6,6 +6,7 @@ import com.cavetale.core.command.CommandContext;
 import com.cavetale.core.command.CommandNode;
 import com.cavetale.core.command.CommandWarn;
 import com.cavetale.core.struct.Cuboid;
+import com.cavetale.mytems.item.axis.CuboidOutline;
 import com.cavetale.resident.save.Loc;
 import com.cavetale.resident.save.Zone;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.Particle;
+import org.bukkit.Color;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -232,7 +233,11 @@ public final class ResidentCommand extends AbstractCommand<ResidentPlugin> {
             throw new CommandWarn("You're not in world " + zoned.zone.getWorld());
         }
         for (Cuboid region : zoned.zone.getRegions()) {
-            region.highlight(zoned.getWorld(), 0.0, loc -> player.spawnParticle(Particle.END_ROD, loc, 1, 0.0, 0.0, 0.0, 0.0));
+            final CuboidOutline outline = new CuboidOutline(player.getWorld(), region);
+            outline.showOnlyTo(player);
+            outline.spawn();
+            outline.removeLater(100L);
+            outline.glow(Color.YELLOW);
         }
         player.sendMessage(Component.text("Highlighting " + zoned.zone.getName(), YELLOW));
         return true;
