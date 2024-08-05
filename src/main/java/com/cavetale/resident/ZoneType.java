@@ -15,6 +15,7 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Breedable;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
@@ -157,17 +158,20 @@ public enum ZoneType {
         entity.setPersistent(false);
         Entities.setTransient(entity);
         entity.setSilent(true);
-        if (entity instanceof Attributable living) {
-            AttributeInstance movementSpeed = living.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+        if (entity instanceof Attributable attributable) {
+            AttributeInstance movementSpeed = attributable.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
             movementSpeed.setBaseValue(0.5);
             for (AttributeModifier it : new ArrayList<>(movementSpeed.getModifiers())) {
                 movementSpeed.removeModifier(it);
             }
         }
+        if (entity instanceof LivingEntity living) {
+            living.setRemoveWhenFarAway(true);
+            living.setCollidable(false);
+        }
         if (entity instanceof Mob mob) {
-            mob.setCollidable(false);
-            mob.setRemoveWhenFarAway(true);
             Bukkit.getMobGoals().removeAllGoals(mob);
+            mob.setAware(true);
         }
         if (entity instanceof Villager villager) {
             villager.setRecipes(List.of());
