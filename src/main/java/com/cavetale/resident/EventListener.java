@@ -20,6 +20,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.VillagerAcquireTradeEvent;
@@ -168,6 +169,11 @@ public final class EventListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     private void onEntityKnockbackByEntity(EntityKnockbackByEntityEvent event) {
+        handleEventEntity(event.getEntity(), event);
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    private void onEntityDropItem(EntityDropItemEvent event) {
         handleEventEntity(event.getEntity(), event);
     }
 
