@@ -236,7 +236,11 @@ public final class Zoned {
     private void move(Spawned spawned, World world) {
         final long now = System.currentTimeMillis();
         final Vec3i mobVector = Vec3i.of(spawned.entity.getLocation());
-        if (spawned.lastMoved < now - 30_000L && !spawnBlocks.contains(mobVector) && !spawnBlocks.contains(mobVector.add(0, -1, 0))) {
+        if (spawned.lastInZone == 0L || spawnBlocks.contains(mobVector) || spawnBlocks.contains(mobVector.add(0, -1, 0))) {
+            // In zone
+            spawned.lastInZone = now;
+        } else if (spawned.lastInZone < now - 30_000L) {
+            // Not in zone for 30s
             spawned.remove();
             plugin.getLogger().info("[" + zone.getName() + "] Removed '" + spawned.getMessageKey() + "' at " + mobVector + " because it was not on a spawn block for too long");
             return;

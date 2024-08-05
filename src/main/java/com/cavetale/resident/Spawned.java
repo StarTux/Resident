@@ -25,6 +25,7 @@ public final class Spawned {
     protected final String messageKey;
     protected long lastMoved;
     protected Vec3i lastMovedVec;
+    protected long lastInZone;
     protected long moveCooldown;
     protected Vec3i movingTo;
     protected boolean pathing;
