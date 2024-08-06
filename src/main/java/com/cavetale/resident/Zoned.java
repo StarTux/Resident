@@ -32,10 +32,10 @@ import org.bukkit.metadata.FixedMetadataValue;
 @Getter
 @RequiredArgsConstructor
 public final class Zoned {
-    protected static final int SPAWN_DISTANCE = 8;
-    protected static final int PLAYER_DISTANCE = 24;
+    protected static final int SPAWN_DISTANCE = 4;
+    protected static final int PLAYER_DISTANCE = 16;
     protected static final int MIN_MOVE_DISTANCE = 4;
-    protected static final int MAX_MOVE_DISTANCE = 32;
+    protected static final int MAX_MOVE_DISTANCE = 24;
     protected final ResidentPlugin plugin;
     protected final Zone zone;
     protected ZoneMessageList messageList;
@@ -276,6 +276,15 @@ public final class Zoned {
         Pathfinder pathfinder = entity.getPathfinder();
         Pathfinder.PathResult pathResult = pathfinder.findPath(target);
         if (pathResult == null) return null;
+        for (Location location : pathResult.getPoints()) {
+            Block b1 = location.getBlock();
+            if (b1.isLiquid()) return null;
+            Block b2 = b1.getRelative(0, -1, 0);
+            if (b2.isLiquid()) return null;
+            if (!spawnBlocks.contains(Vec3i.of(b1)) && !spawnBlocks.contains(Vec3i.of(b2))) {
+                return null;
+            }
+        }
         pathfinder.moveTo(pathResult, 0.5);
         return pathResult;
     }
