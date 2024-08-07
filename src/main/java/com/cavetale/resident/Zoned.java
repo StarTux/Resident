@@ -35,7 +35,7 @@ public final class Zoned {
     protected static final int SPAWN_DISTANCE = 4;
     protected static final int PLAYER_DISTANCE = 16;
     protected static final int MIN_MOVE_DISTANCE = 4;
-    protected static final int MAX_MOVE_DISTANCE = 24;
+    protected static final int MAX_MOVE_DISTANCE = 12;
     protected final ResidentPlugin plugin;
     protected final Zone zone;
     protected ZoneMessageList messageList;
@@ -243,6 +243,14 @@ public final class Zoned {
             // Not in zone for 30s
             spawned.remove();
             plugin.getLogger().info("[" + zone.getName() + "] Removed '" + spawned.getMessageKey() + "' at " + mobVector + " because it was not on a spawn block for too long");
+            return;
+        }
+        if (spawned.lastMoved == 0L) {
+            spawned.lastMoved = now;
+        } else if (spawned.lastMoved < now - 60_000L) {
+            // No movement for 60s
+            spawned.remove();
+            plugin.getLogger().info("[" + zone.getName() + "] Removed '" + spawned.getMessageKey() + "' at " + mobVector + " because it dit not move for too long");
             return;
         }
         List<Vec3i> loadedBlockList = new ArrayList<>(loadedSpawnBlocks);
