@@ -157,7 +157,6 @@ public final class ZoneMessage {
         }
         if (scale > 0.0 && entity instanceof Attributable attributable) {
             attributable.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(scale);
-            mul(attributable, Attribute.GENERIC_MOVEMENT_SPEED, Math.sqrt(scale));
             mul(attributable, Attribute.GENERIC_FLYING_SPEED, scale);
             mul(attributable, Attribute.GENERIC_GRAVITY, scale);
             mul(attributable, Attribute.GENERIC_JUMP_STRENGTH, scale);
