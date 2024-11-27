@@ -159,7 +159,7 @@ public enum ZoneType {
         Entities.setTransient(entity);
         entity.setSilent(true);
         if (entity instanceof Attributable attributable) {
-            AttributeInstance movementSpeed = attributable.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED);
+            AttributeInstance movementSpeed = attributable.getAttribute(Attribute.MOVEMENT_SPEED);
             movementSpeed.setBaseValue(0.5);
             for (AttributeModifier it : new ArrayList<>(movementSpeed.getModifiers())) {
                 movementSpeed.removeModifier(it);

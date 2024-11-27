@@ -156,11 +156,11 @@ public final class ZoneMessage {
             }
         }
         if (scale > 0.0 && entity instanceof Attributable attributable) {
-            attributable.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(scale);
-            mul(attributable, Attribute.GENERIC_FLYING_SPEED, scale);
-            mul(attributable, Attribute.GENERIC_GRAVITY, scale);
-            mul(attributable, Attribute.GENERIC_JUMP_STRENGTH, scale);
-            mul(attributable, Attribute.GENERIC_STEP_HEIGHT, scale);
+            attributable.getAttribute(Attribute.SCALE).setBaseValue(scale);
+            mul(attributable, Attribute.FLYING_SPEED, scale);
+            mul(attributable, Attribute.GRAVITY, scale);
+            mul(attributable, Attribute.JUMP_STRENGTH, scale);
+            mul(attributable, Attribute.STEP_HEIGHT, scale);
         }
     }
 
