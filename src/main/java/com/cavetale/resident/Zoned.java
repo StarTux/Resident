@@ -289,9 +289,6 @@ public final class Zoned {
             if (b1.isLiquid()) return null;
             Block b2 = b1.getRelative(0, -1, 0);
             if (b2.isLiquid()) return null;
-            if (!spawnBlocks.contains(Vec3i.of(b1)) && !spawnBlocks.contains(Vec3i.of(b2))) {
-                return null;
-            }
         }
         pathfinder.moveTo(pathResult, 0.5);
         return pathResult;
