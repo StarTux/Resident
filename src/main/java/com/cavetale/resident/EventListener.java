@@ -102,14 +102,14 @@ public final class EventListener implements Listener {
 
     @EventHandler(ignoreCancelled = false, priority = EventPriority.LOWEST)
     private void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        handleEventEntity(event.getDamager(), event);
         switch (event.getCause()) {
         case ENTITY_ATTACK: break;
         default: return;
         }
         Spawned spawned = handleEventEntity(event.getEntity(), event);
         if (spawned == null) return;
-        if (!(event.getDamager() instanceof Player)) return;
-        Player player = (Player) event.getDamager();
+        if (!(event.getDamager() instanceof Player player)) return;
         if (!spawned.zone.isNull()) {
             Zoned zoned = plugin.zonedMap.get(spawned.zone.getName());
             if (zoned == null) return;
