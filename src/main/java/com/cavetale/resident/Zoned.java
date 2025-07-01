@@ -22,6 +22,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -181,8 +182,8 @@ public final class Zoned {
             final List<String> keys = new ArrayList<>(messageList.size());
             keys.addAll(messageList.getMessages().keySet());
             for (Spawned existing : plugin.findSpawned(zone)) {
-                if (existing.messageKey == null) continue;
-                keys.remove(existing.messageKey);
+                if (existing.getMessageKey() == null) continue;
+                keys.remove(existing.getMessageKey());
             }
             messageKey = !keys.isEmpty()
                 ? keys.get(plugin.random.nextInt(keys.size()))
@@ -195,6 +196,7 @@ public final class Zoned {
             : null;
         final Mob mob;
         if (message != null && message.getEntityType() != null) {
+            location = location.add(0, message.getFlyHeight(), 0);
             var tmp = location.getWorld().spawn(location, message.getEntityType().getEntityClass(), false, e -> {
                     ZoneType.prepEntity(e);
                     message.applyEntity(e);
@@ -212,7 +214,7 @@ public final class Zoned {
             mob.customName(message.getDisplayName());
         }
         final int entityId = mob.getEntityId();
-        final Spawned spawned = new Spawned(mob, zone, messageKey);
+        final Spawned spawned = new Spawned(mob, zone, message);
         plugin.spawnedMap.put(entityId, spawned);
         spawned.movingTo = Vec3i.of(location);
         mob.setMetadata("nomap", new FixedMetadataValue(plugin, true));
@@ -226,6 +228,16 @@ public final class Zoned {
         if (spawnedList.isEmpty()) return;
         final long now = System.currentTimeMillis();
         for (Spawned spawned : spawnedList) {
+            final Vec3i mobVector = Vec3i.of(spawned.entity.getLocation());
+            if (spawned.lastInZone == 0L || spawnBlocks.contains(mobVector) || spawnBlocks.contains(mobVector.add(0, -1, 0)) || spawnBlocks.contains(mobVector.add(0, -((int) Math.ceil(1.0 + spawned.getFlyHeight())), 0))) {
+                // In zone
+                spawned.lastInZone = now;
+            } else if (spawned.lastInZone < now - 30_000L) {
+                // Not in zone for 30s
+                spawned.remove();
+                plugin.getLogger().info("[" + zone.getName() + "] Removed '" + spawned.getMessageKey() + "' at " + mobVector + " because it was not on a spawn block for too long");
+                return;
+            }
             if (spawned.lastMoved > now - 2000L) continue;
             if (spawned.moveCooldown > now) continue;
             spawned.moveCooldown = now + 5000L;
@@ -236,15 +248,6 @@ public final class Zoned {
     private void move(Spawned spawned, World world) {
         final long now = System.currentTimeMillis();
         final Vec3i mobVector = Vec3i.of(spawned.entity.getLocation());
-        if (spawned.lastInZone == 0L || spawnBlocks.contains(mobVector) || spawnBlocks.contains(mobVector.add(0, -1, 0))) {
-            // In zone
-            spawned.lastInZone = now;
-        } else if (spawned.lastInZone < now - 30_000L) {
-            // Not in zone for 30s
-            spawned.remove();
-            plugin.getLogger().info("[" + zone.getName() + "] Removed '" + spawned.getMessageKey() + "' at " + mobVector + " because it was not on a spawn block for too long");
-            return;
-        }
         if (spawned.lastMoved == 0L) {
             spawned.lastMoved = now;
         } else if (spawned.lastMoved < now - 60_000L) {
@@ -272,7 +275,7 @@ public final class Zoned {
         final Block block = targetVector.toBlock(world);
         if (!canSpawnOnBlock(block)) return;
         // Move!
-        final Location location = block.getLocation().add(0.5, 1.0, 0.5);
+        final Location location = block.getLocation().add(0.5, 1.0 + spawned.getFlyHeight(), 0.5);
         spawned.pathing = true;
         if (null != findPath(spawned.entity, location)) {
             spawned.movingTo = targetVector;
@@ -310,8 +313,8 @@ public final class Zoned {
         spawned.entity.lookAt(player);
         player.playSound(spawned.entity.getEyeLocation(), spawned.getTalkSound(), 1f, 1f);
         // Message
-        if (spawned.messageKey == null) return;
-        ZoneMessage message = messageList.get(spawned.messageKey);
+        if (spawned.getMessageKey() == null) return;
+        ZoneMessage message = messageList.get(spawned.getMessageKey());
         message.send(player);
     }
 

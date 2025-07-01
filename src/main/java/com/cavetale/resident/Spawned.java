@@ -3,11 +3,13 @@ package com.cavetale.resident;
 import com.cavetale.core.struct.Vec3i;
 import com.cavetale.mytems.Mytems;
 import com.cavetale.mytems.util.Entities;
+import com.cavetale.resident.message.ZoneMessage;
 import com.cavetale.resident.save.Zone;
 import lombok.Data;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Mob;
 import org.bukkit.scheduler.BukkitTask;
@@ -22,7 +24,7 @@ import org.joml.Vector3f;
 public final class Spawned {
     protected final Mob entity;
     protected final Zone zone;
-    protected final String messageKey;
+    protected final ZoneMessage message;
     protected long lastMoved;
     protected Vec3i lastMovedVec;
     protected long lastInZone;
@@ -82,5 +84,21 @@ public final class Spawned {
         case VILLAGER -> Sound.ENTITY_VILLAGER_TRADE;
         default -> entity.getAmbientSound();
         };
+    }
+
+    public EntityType getEntityType() {
+        return entity.getType();
+    }
+
+    public String getMessageKey() {
+        return message != null
+            ? message.getKey()
+            : null;
+    }
+
+    public double getFlyHeight() {
+        return message != null
+            ? message.getFlyHeight()
+            : 0.0;
     }
 }

@@ -55,6 +55,7 @@ public final class ZoneMessage {
     private int villagerLevel;
     private boolean baby;
     private double scale;
+    private double flyHeight;
 
     public void load(ConfigurationSection config) {
         final var rawDisplayName = config.getString("DisplayName");
@@ -77,6 +78,7 @@ public final class ZoneMessage {
         }
         baby = config.getBoolean("Baby", false);
         scale = config.getDouble("Scale", 0.0);
+        flyHeight = config.getDouble("FlyHeight", 0.0);
     }
 
     private <T extends Enum<T>> T parseEnum(ConfigurationSection config, String configKey, Class<T> enumClass) {
