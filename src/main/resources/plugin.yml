@@ -3,7 +3,7 @@ main: com.cavetale.resident.ResidentPlugin
 name: Resident
 version: 0.1
 description: Talking Villager Zones
-api-version: '26.1.2'
+api-version: '26.3'
 
 author: StarTux
 website: https://github.com/StarTux/Resident
